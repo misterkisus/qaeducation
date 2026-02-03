@@ -1,219 +1,180 @@
-// API Configuration
-const API_URL = 'http://localhost:3000/api';
+// ============ API CONFIGURATION ============
+// Автоматически определяем URL API на основе текущего хоста
+const API_URL = window.location.origin + '/api';
 
-// Auth State
+// Или просто используй относительный путь (тоже работает):
+// const API_URL = '/api';
+
 let currentUser = null;
 let authToken = localStorage.getItem('authToken');
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
-    updateCartCount();
+// ============ INITIALIZATION ============
+document.addEventListener('DOMContentLoaded', () => { 
+    checkAuth(); 
+    updateCartCount(); 
 });
 
-// Check Authentication
+// ============ AUTH FUNCTIONS ============
 async function checkAuth() {
-    if (!authToken) {
-        updateAuthUI(null);
-        return;
+    if (!authToken) { 
+        updateAuthUI(null); 
+        return; 
     }
-
     try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
+        const res = await fetch(`${API_URL}/auth/me`, { 
+            headers: { 'Authorization': `Bearer ${authToken}` } 
         });
-
-        if (response.ok) {
-            currentUser = await response.json();
-            updateAuthUI(currentUser);
+        if (res.ok) { 
+            currentUser = await res.json(); 
+            updateAuthUI(currentUser); 
         } else {
             logout();
         }
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        logout();
+    } catch (e) { 
+        console.error('Auth check failed:', e);
+        logout(); 
     }
 }
 
-// Update Auth UI
 function updateAuthUI(user) {
-    const authSection = document.getElementById('auth-section');
-    if (!authSection) return;
-
+    const el = document.getElementById('auth-section');
+    if (!el) return;
     if (user) {
-        authSection.innerHTML = `
-            <div class="user-menu">
-                <span class="user-name">Привет, ${user.name}!</span>
-                ${user.role === 'admin' ? '<a href="/pages/admin/dashboard.html" class="btn btn-sm btn-outline">Админка</a>' : ''}
-                <a href="/pages/orders.html" class="btn btn-sm btn-outline">Заказы</a>
-                <button onclick="logout()" class="btn btn-sm btn-danger">Выйти</button>
-            </div>
-        `;
+        el.innerHTML = `<div class="user-menu">
+            <span>Привет, ${user.name}!</span>
+            ${user.role === 'admin' ? '<a href="/pages/admin/dashboard.html" class="btn btn-sm btn-outline">Админка</a>' : ''}
+            <a href="/pages/orders.html" class="btn btn-sm btn-outline">Заказы</a>
+            <button onclick="logout()" class="btn btn-sm btn-danger">Выйти</button>
+        </div>`;
     } else {
-        authSection.innerHTML = `
-            <a href="/pages/login.html" class="btn btn-outline">Войти</a>
-            <a href="/pages/register.html" class="btn btn-primary">Регистрация</a>
-        `;
+        el.innerHTML = '<a href="/pages/login.html" class="btn btn-outline">Войти</a><a href="/pages/register.html" class="btn btn-primary">Регистрация</a>';
     }
 }
 
-// Login
 async function login(email, password) {
     try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
+        const res = await fetch(`${API_URL}/auth/login`, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ email, password }) 
         });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            authToken = data.token;
-            localStorage.setItem('authToken', authToken);
+        const data = await res.json();
+        if (res.ok) {
+            authToken = data.token; 
+            localStorage.setItem('authToken', authToken); 
             currentUser = data.user;
-            showToast('Вход выполнен успешно!', 'success');
-            
-            // Redirect based on role
-            if (data.user.role === 'admin') {
-                window.location.href = '/pages/admin/dashboard.html';
-            } else {
-                window.location.href = '/';
-            }
+            showToast('Вход выполнен!', 'success');
+            window.location.href = data.user.role === 'admin' ? '/pages/admin/dashboard.html' : '/';
         } else {
             showToast(data.error || 'Ошибка входа', 'error');
         }
-    } catch (error) {
-        showToast('Ошибка соединения с сервером', 'error');
+    } catch (e) { 
+        console.error('Login error:', e);
+        showToast('Ошибка соединения с сервером', 'error'); 
     }
 }
 
-// Register
 async function register(email, password, name) {
     try {
-        const response = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password, name })
+        const res = await fetch(`${API_URL}/auth/register`, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ email, password, name }) 
         });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            authToken = data.token;
+        const data = await res.json();
+        if (res.ok) {
+            authToken = data.token; 
             localStorage.setItem('authToken', authToken);
-            currentUser = data.user;
-            showToast('Регистрация успешна!', 'success');
+            showToast('Регистрация успешна!', 'success'); 
             window.location.href = '/';
         } else {
             showToast(data.error || 'Ошибка регистрации', 'error');
         }
-    } catch (error) {
-        showToast('Ошибка соединения с сервером', 'error');
+    } catch (e) { 
+        console.error('Register error:', e);
+        showToast('Ошибка соединения с сервером', 'error'); 
     }
 }
 
-// Logout
-function logout() {
-    authToken = null;
-    currentUser = null;
-    localStorage.removeItem('authToken');
-    updateAuthUI(null);
-    window.location.href = '/';
+function logout() { 
+    authToken = null; 
+    currentUser = null; 
+    localStorage.removeItem('authToken'); 
+    updateAuthUI(null); 
+    window.location.href = '/'; 
 }
 
-// Update Cart Count
+// ============ CART FUNCTIONS ============
 async function updateCartCount() {
-    const cartCountEl = document.getElementById('cart-count');
-    if (!cartCountEl) return;
-
-    if (!authToken) {
-        cartCountEl.textContent = '0';
-        return;
+    const el = document.getElementById('cart-count');
+    if (!el) return;
+    
+    if (!authToken) { 
+        el.textContent = '0'; 
+        return; 
     }
-
+    
     try {
-        const response = await fetch(`${API_URL}/cart`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
+        const res = await fetch(`${API_URL}/cart`, { 
+            headers: { 'Authorization': `Bearer ${authToken}` } 
         });
-
-        if (response.ok) {
-            const data = await response.json();
-            const count = data.items.reduce((sum, item) => sum + item.quantity, 0);
-            cartCountEl.textContent = count;
+        if (res.ok) { 
+            const data = await res.json(); 
+            el.textContent = data.items.reduce((s, i) => s + i.quantity, 0); 
         }
-    } catch (error) {
-        console.error('Failed to update cart count:', error);
+    } catch (e) {
+        console.error('Cart count error:', e);
     }
 }
 
-// Show Toast Notification
+// ============ UI HELPERS ============
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
-
+    
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
     const icon = type === 'success' ? 'check-circle' : 
                  type === 'error' ? 'exclamation-circle' : 
-                 'info-circle';
+                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
     
-    toast.innerHTML = `
-        <i class="fas fa-${icon}"></i>
-        <span>${message}</span>
-    `;
-
+    toast.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
     container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+    
+    setTimeout(() => toast.remove(), 3000);
 }
 
-// Format Price
-function formatPrice(price) {
-    return new Intl.NumberFormat('ru-RU', {
-        style: 'currency',
-        currency: 'RUB'
-    }).format(price);
+function formatPrice(price) { 
+    return new Intl.NumberFormat('ru-RU', { 
+        style: 'currency', 
+        currency: 'RUB' 
+    }).format(price); 
 }
 
-// BUG #6: Функция форматирует дату в US формате вместо RU
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    // Баг: используется US формат MM/DD/YYYY вместо DD.MM.YYYY
-    return date.toLocaleDateString('en-US'); // Должно быть 'ru-RU'
+// BUG #6: Дата в американском формате вместо русского
+function formatDate(dateString) { 
+    return new Date(dateString).toLocaleDateString('en-US'); // Должно быть 'ru-RU'
 }
 
-// API Request Helper
+// ============ API HELPER ============
 async function apiRequest(endpoint, options = {}) {
-    const defaultOptions = {
-        headers: {
-            'Content-Type': 'application/json'
-        }
+    const headers = { 
+        'Content-Type': 'application/json', 
+        ...options.headers 
     };
-
+    
     if (authToken) {
-        defaultOptions.headers['Authorization'] = `Bearer ${authToken}`;
+        headers['Authorization'] = `Bearer ${authToken}`;
     }
-
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        ...defaultOptions,
-        ...options,
-        headers: {
-            ...defaultOptions.headers,
-            ...options.headers
-        }
+    
+    const response = await fetch(`${API_URL}${endpoint}`, { 
+        ...options, 
+        headers 
     });
-
+    
     return response;
 }
+
+// Для отладки - показать текущий API URL в консоли
+console.log('API URL:', API_URL);
