@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товар - TechShop</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: var(--white); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .product-page-image { width: 100%; height: 400px; object-fit: cover; border-radius: var(--radius); }
+        .product-page-title { font-size: 1.75rem; margin-bottom: 10px; }
+        .product-page-category { color: var(--text-light); margin-bottom: 20px; }
+        .product-page-price { font-size: 2rem; color: var(--primary); font-weight: bold; margin-bottom: 20px; }
+        .product-page-description { color: var(--text-light); line-height: 1.8; margin-bottom: 30px; }
+        .product-page-stock { margin-bottom: 20px; padding: 10px 15px; border-radius: var(--radius); display: inline-block; }
+        .product-page-stock.in-stock { background: #d4edda; color: #155724; }
+        .product-page-stock.low-stock { background: #fff3cd; color: #856404; }
+        .product-page-stock.out-of-stock { background: #f8d7da; color: #721c24; }
+        .quantity-selector { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .quantity-selector input { width: 80px; padding: 10px; text-align: center; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1.1rem; }
+        .add-to-cart-btn { padding: 15px 40px; font-size: 1.1rem; }
+        @media (max-width: 768px) { .product-page { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo"><i class="fas fa-shopping-bag"></i> TechShop</a>
+            <nav class="nav">
+                <a href="/" class="nav-link">Каталог</a>
+                <a href="/pages/cart.html" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i> Корзина
+                    <span class="cart-count" id="cart-count">0</span>
+                </a>
+            </nav>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <a href="/" style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--primary); text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Назад в каталог
+            </a>
+            
+            <div class="product-page" id="product-container">
+                <div style="text-align: center; padding: 50px;">Загрузка...</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let currentProduct = null;
+
+        async function loadProduct() {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+            
+            if (!productId) {
+                window.location.href = '/';
+                return;
+            }
+
+            const container = document.getElementById('product-container');
+
+            try {
+                const response = await fetch(`/api/products/${productId}`);
+                
+                if (!response.ok) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Товар не найден</h3>
+                            <a href="/" class="btn btn-primary">Вернуться в каталог</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentProduct = await response.json();
+                
+                let stockClass, stockText;
+                if (currentProduct.stock === 0) {
+                    stockClass = 'out-of-stock';
+                    stockText = 'Нет в наличии';
+                } else if (currentProduct.stock < 10) {
+                    stockClass = 'low-stock';
+                    stockText = `Осталось всего ${currentProduct.stock} шт.`;
+                } else {
+                    stockClass = 'in-stock';
+                    stockText = `В наличии: ${currentProduct.stock} шт.`;
+                }
+
+                container.innerHTML = `
+                    <div>
+                        <img src="${currentProduct.image}" alt="${currentProduct.name}" class="product-page-image"
+                             onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+                    </div>
+                    <div>
+                        <h1 class="product-page-title">${currentProduct.name}</h1>
+                        <div class="product-page-category">
+                            <i class="fas fa-tag"></i> ${currentProduct.category}
+                        </div>
+                        <div class="product-page-price">${formatPrice(currentProduct.price)}</div>
+                        <div class="product-page-stock ${stockClass}">
+                            <i class="fas fa-${currentProduct.stock > 0 ? 'check' : 'times'}"></i>
+                            ${stockText}
+                        </div>
+                        <p class="product-page-description">${currentProduct.description || 'Описание отсутствует'}</p>
+                        
+                        ${currentProduct.stock > 0 ? `
+                            <div class="quantity-selector">
+                                <label>Количество:</label>
+                                <input type="number" id="quantity" value="1" min="1" max="${currentProduct.stock}">
+                            </div>
+                            <button class="btn btn-primary add-to-cart-btn" onclick="addProductToCart()">
+                                <i class="fas fa-cart-plus"></i> Добавить в корзину
+                            </button>
+                        ` : `
+                            <button class="btn btn-secondary add-to-cart-btn" disabled>
+                                <i class="fas fa-ban"></i> Нет в наличии
+                            </button>
+                        `}
+                    </div>
+                `;
+
+                document.title = `${currentProduct.name} - TechShop`;
+
+            } catch (error) {
+                console.error('Error loading product:', error);
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Ошибка загрузки</h3>
+                        <a href="/" class="btn btn-primary">Вернуться в каталог</a>
+                    </div>
+                `;
+            }
+        }
+
+        async function addProductToCart() {
+            if (!currentProduct) return;
+
+            if (!authToken) {
+                showToast('Войдите для добавления в корзину', 'warning');
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+            try {
+                const response = await apiRequest('/cart/add', {
+                    method: 'POST',
+                    body: JSON.stringify({ productId: currentProduct.id, quantity })
+                });
+
+                if (response.ok) {
+                    showToast(`${currentProduct.name} добавлен в корзину`, 'success');
+                    updateCartCount();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Ошибка добавления', 'error');
+                }
+            } catch (error) {
+                showToast('Ошибка соединения', 'error');
+            }
+        }
+
+        // Init
+        checkAuth();
+        loadProduct();
+    </script>
+</body>
+</html>

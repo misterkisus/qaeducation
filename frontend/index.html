@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechShop - Интернет-магазин электроники</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo">
+                <i class="fas fa-shopping-bag"></i>
+                TechShop
+            </a>
+            
+            <nav class="nav">
+                <a href="/" class="nav-link active">Каталог</a>
+                <a href="/pages/cart.html" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    Корзина
+                    <span class="cart-count" id="cart-count">0</span>
+                </a>
+            </nav>
+
+            <div class="auth-section" id="auth-section">
+                <a href="/pages/login.html" class="btn btn-outline">Войти</a>
+                <a href="/pages/register.html" class="btn btn-primary">Регистрация</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Filters -->
+            <section class="filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Поиск товаров...">
+                </div>
+                
+                <div class="filter-group">
+                    <select id="category-filter">
+                        <option value="">Все категории</option>
+                    </select>
+                    
+                    <select id="sort-filter">
+                        <option value="">Сортировка</option>
+                        <option value="price_asc">Цена: по возрастанию</option>
+                        <option value="price_desc">Цена: по убыванию</option>
+                        <option value="name">По названию</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Products Grid -->
+            <section class="products-grid" id="products-grid">
+                <!-- Products loaded dynamically -->
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 TechShop. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <!-- Toast notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/products.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - TechShop</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo">
+                <i class="fas fa-shopping-bag"></i>
+                TechShop
+            </a>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <nav class="admin-menu">
+                <a href="/pages/admin/dashboard.html" class="active">
+                    <i class="fas fa-chart-line"></i>
+                    Дашборд
+                </a>
+                <a href="/pages/admin/products.html">
+                    <i class="fas fa-box"></i>
+                    Товары
+                </a>
+                <a href="/pages/admin/orders.html">
+                    <i class="fas fa-shopping-bag"></i>
+                    Заказы
+                </a>
+                <a href="/">
+                    <i class="fas fa-store"></i>
+                    На сайт
+                </a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            <div class="admin-header">
+                <h1>Дашборд</h1>
+            </div>
+
+            <div class="stats-grid" id="stats-grid">
+                <!-- Stats loaded dynamically -->
+            </div>
+
+            <h2 style="margin-bottom: 20px;">Последние заказы</h2>
+            <div id="recent-orders">
+                <!-- Recent orders loaded dynamically -->
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function loadDashboard() {
+            // Load stats
+            try {
+                const response = await apiRequest('/admin/stats');
+                const stats = await response.json();
+
+                document.getElementById('stats-grid').innerHTML = `
+                    <div class="stat-card">
+                        <h3>Товаров</h3>
+                        <div class="value">${stats.totalProducts}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Заказов</h3>
+                        <div class="value">${stats.totalOrders}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Выручка</h3>
+                        <div class="value">${formatPrice(stats.totalRevenue)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Пользователей</h3>
+                        <div class="value">${stats.totalUsers}</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+
+            // Load recent orders
+            try {
+                const response = await apiRequest('/admin/orders');
+                const orders = await response.json();
+
+                document.getElementById('recent-orders').innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Клиент</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.slice(0, 5).map(order => `
+                                <tr>
+                                    <td>#${order.id}</td>
+                                    <td>${order.user_name || order.email}</td>
+                                    <td>${formatPrice(order.total)}</td>
+                                    <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+                                    <td>${formatDate(order.created_at)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+            }
+        }
+
+        checkAuth();
+        loadDashboard();
+    </script>
+</body>
+</html>

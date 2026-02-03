@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформление заказа - TechShop</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-input-group { position: relative; }
+        .card-input-group i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #999; }
+        .card-input-group input { padding-right: 45px; }
+        .field-error { border-color: #e74c3c !important; }
+        .error-message { color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: none; }
+        .error-message.visible { display: block; }
+        .card-icons { display: flex; gap: 8px; margin-bottom: 15px; }
+        .card-icons img { height: 24px; opacity: 0.4; transition: opacity 0.3s; }
+        .card-icons img.active { opacity: 1; }
+        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .order-item:last-child { border-bottom: none; }
+        .secure-badge { display: flex; align-items: center; gap: 8px; color: #27ae60; font-size: 0.9rem; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo"><i class="fas fa-shopping-bag"></i> TechShop</a>
+            <nav class="nav">
+                <a href="/" class="nav-link">Каталог</a>
+                <a href="/pages/cart.html" class="nav-link"><i class="fas fa-shopping-cart"></i> Корзина</a>
+            </nav>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <h1 style="margin-bottom: 30px;">Оформление заказа</h1>
+            
+            <div class="checkout-container">
+                <div class="checkout-form">
+                    <form id="checkout-form" novalidate>
+                        <h2><i class="fas fa-map-marker-alt"></i> Адрес доставки</h2>
+                        <div class="form-group">
+                            <label for="address">Полный адрес *</label>
+                            <textarea id="address" name="address" required 
+                                placeholder="Город, улица, дом, квартира, индекс" 
+                                rows="3"></textarea>
+                            <div class="error-message" id="address-error"></div>
+                        </div>
+
+                        <h2 style="margin-top: 30px;"><i class="fas fa-credit-card"></i> Данные карты</h2>
+                        
+                        <div class="card-icons">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" id="icon-visa">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" id="icon-mc">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="card-number">Номер карты *</label>
+                            <div class="card-input-group">
+                                <input type="text" id="card-number" name="card-number" 
+                                    placeholder="0000 0000 0000 0000" 
+                                    maxlength="19" 
+                                    inputmode="numeric"
+                                    autocomplete="cc-number"
+                                    required>
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="error-message" id="card-number-error"></div>
+                        </div>
+
+                        <div class="card-inputs">
+                            <div class="form-group">
+                                <label for="card-expiry">Срок действия *</label>
+                                <input type="text" id="card-expiry" name="card-expiry" 
+                                    placeholder="MM/YY" 
+                                    maxlength="5"
+                                    inputmode="numeric"
+                                    autocomplete="cc-exp"
+                                    required>
+                                <div class="error-message" id="card-expiry-error"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="card-cvc">CVC *</label>
+                                <div class="card-input-group">
+                                    <input type="text" id="card-cvc" name="card-cvc" 
+                                        placeholder="123" 
+                                        maxlength="3"
+                                        inputmode="numeric"
+                                        autocomplete="cc-csc"
+                                        required>
+                                    <i class="fas fa-question-circle" title="3 цифры на обратной стороне карты"></i>
+                                </div>
+                                <div class="error-message" id="card-cvc-error"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                            <strong>🧪 Тестовый режим</strong><br>
+                            <small>Используйте тестовые карты:<br>
+                            • 4242 4242 4242 4242 (Visa)<br>
+                            • 5555 5555 5555 4444 (Mastercard)<br>
+                            Срок: любой в будущем, CVC: любые 3 цифры</small>
+                        </div>
+
+                        <div class="secure-badge">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Безопасная оплата. Данные защищены шифрованием.</span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submit-btn" style="width: 100%; margin-top: 25px; padding: 15px;">
+                            <i class="fas fa-lock"></i> Оплатить <span id="pay-amount"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="cart-summary" id="order-summary">
+                    <h3>Ваш заказ</h3>
+                    <div id="order-items">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let cartData = null;
+
+        // ============ INPUT MASKS ============
+        
+        // Маска для номера карты: 0000 0000 0000 0000
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Только цифры
+            value = value.substring(0, 16); // Максимум 16 цифр
+            
+            // Добавляем пробелы каждые 4 цифры
+            let formatted = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) formatted += ' ';
+                formatted += value[i];
+            }
+            
+            e.target.value = formatted;
+            
+            // Подсвечиваем иконку типа карты
+            document.getElementById('icon-visa').classList.toggle('active', value.startsWith('4'));
+            document.getElementById('icon-mc').classList.toggle('active', value.startsWith('5'));
+            
+            // Убираем ошибку при вводе
+            clearError('card-number');
+        });
+
+        // Маска для срока действия: MM/YY
+        document.getElementById('card-expiry').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Только цифры
+            value = value.substring(0, 4); // Максимум 4 цифры
+            
+            if (value.length >= 2) {
+                // Проверяем месяц
+                let month = parseInt(value.substring(0, 2));
+                if (month > 12) month = 12;
+                if (month < 1 && value.length >= 2) month = '0' + value[1];
+                value = month.toString().padStart(2, '0') + value.substring(2);
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            
+            e.target.value = value;
+            clearError('card-expiry');
+        });
+
+        // Маска для CVC: только 3 цифры
+        document.getElementById('card-cvc').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+            clearError('card-cvc');
+        });
+
+        // Убираем ошибку при вводе адреса
+        document.getElementById('address').addEventListener('input', function() {
+            clearError('address');
+        });
+
+        // ============ VALIDATION ============
+        
+        function showError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + '-error');
+            input.classList.add('field-error');
+            error.textContent = message;
+            error.classList.add('visible');
+        }
+
+        function clearError(fieldId) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + '-error');
+            input.classList.remove('field-error');
+            error.classList.remove('visible');
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Адрес
+            const address = document.getElementById('address').value.trim();
+            if (address.length < 10) {
+                showError('address', 'Введите полный адрес (минимум 10 символов)');
+                isValid = false;
+            }
+
+            // Номер карты
+            const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+            if (!/^\d{16}$/.test(cardNumber)) {
+                showError('card-number', 'Введите 16 цифр номера карты');
+                isValid = false;
+            }
+
+            // Срок действия
+            const expiry = document.getElementById('card-expiry').value;
+            if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+                showError('card-expiry', 'Введите срок в формате MM/YY');
+                isValid = false;
+            } else {
+                const [month, year] = expiry.split('/').map(Number);
+                const now = new Date();
+                const exp = new Date(2000 + year, month - 1);
+                if (exp < now) {
+                    showError('card-expiry', 'Срок действия карты истёк');
+                    isValid = false;
+                }
+            }
+
+            // CVC
+            const cvc = document.getElementById('card-cvc').value;
+            if (!/^\d{3}$/.test(cvc)) {
+                showError('card-cvc', 'Введите 3 цифры CVC');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // ============ LOAD ORDER SUMMARY ============
+        
+        async function loadOrderSummary() {
+            const container = document.getElementById('order-items');
+            const payAmount = document.getElementById('pay-amount');
+            
+            if (!authToken) {
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            try {
+                const res = await apiRequest('/cart');
+                cartData = await res.json();
+
+                if (!cartData.items || cartData.items.length === 0) {
+                    window.location.href = '/pages/cart.html';
+                    return;
+                }
+
+                container.innerHTML = cartData.items.map(item => `
+                    <div class="order-item">
+                        <span>${item.name} × ${item.quantity}</span>
+                        <span><strong>${formatPrice(item.price * item.quantity)}</strong></span>
+                    </div>
+                `).join('') + `
+                    <div class="order-item" style="border-top: 2px solid #333; margin-top: 10px; padding-top: 15px;">
+                        <span><strong>Доставка</strong></span>
+                        <span style="color: #27ae60;"><strong>Бесплатно</strong></span>
+                    </div>
+                    <div class="summary-row summary-total" style="margin-top: 15px;">
+                        <span>Итого к оплате</span>
+                        <span>${formatPrice(cartData.total)}</span>
+                    </div>
+                `;
+
+                payAmount.textContent = formatPrice(cartData.total);
+
+            } catch (error) {
+                console.error('Error loading order summary:', error);
+                container.innerHTML = '<p style="color: #e74c3c;">Ошибка загрузки корзины</p>';
+            }
+        }
+
+        // ============ FORM SUBMIT ============
+        
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                showToast('Проверьте правильность заполнения полей', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обработка...';
+
+            try {
+                const res = await apiRequest('/orders/checkout', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        shippingAddress: document.getElementById('address').value.trim(),
+                        cardNumber: document.getElementById('card-number').value,
+                        cardExpiry: document.getElementById('card-expiry').value,
+                        cardCvc: document.getElementById('card-cvc').value
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast('🎉 Заказ успешно оформлен!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/pages/orders.html';
+                    }, 1500);
+                } else {
+                    showToast(data.error || 'Ошибка оформления заказа', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            } catch (error) {
+                showToast('Ошибка соединения с сервером', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
+        // ============ INIT ============
+        checkAuth();
+        loadOrderSummary();
+    </script>
+</body>
+</html>

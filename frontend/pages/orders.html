@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои заказы - TechShop</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo">
+                <i class="fas fa-shopping-bag"></i>
+                TechShop
+            </a>
+            <nav class="nav">
+                <a href="/" class="nav-link">Каталог</a>
+                <a href="/pages/cart.html" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    Корзина
+                    <span class="cart-count" id="cart-count">0</span>
+                </a>
+            </nav>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <h1 style="margin-bottom: 30px;">Мои заказы</h1>
+            
+            <div id="orders-container">
+                <!-- Orders loaded dynamically -->
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function loadOrders() {
+            const container = document.getElementById('orders-container');
+
+            try {
+                const response = await apiRequest('/orders');
+                const orders = await response.json();
+
+                if (orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <h3>У вас пока нет заказов</h3>
+                            <a href="/" class="btn btn-primary">В каталог</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>№ Заказа</th>
+                                <th>Дата</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.map(order => `
+                                <tr>
+                                    <td>#${order.id}</td>
+                                    <td>${formatDate(order.created_at)}</td>
+                                    <td>${formatPrice(order.total)}</td>
+                                    <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+            }
+        }
+
+        function getStatusText(status) {
+            const statuses = {
+                'pending': 'Ожидает',
+                'processing': 'В обработке',
+                'shipped': 'Отправлен',
+                'delivered': 'Доставлен',
+                'cancelled': 'Отменён'
+            };
+            return statuses[status] || status;
+        }
+
+        checkAuth();
+        loadOrders();
+    </script>
+</body>
+</html>
