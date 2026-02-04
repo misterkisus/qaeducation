@@ -1,0 +1,258 @@
+openapi: 3.0.3
+
+info:
+  title: TechShop API
+  description: |
+    REST API интернет-магазина TechShop.
+
+    API используется frontend-приложением и административной панелью.
+    Документация предназначена для разработчиков и QA-инженеров.
+  version: 1.0.0
+
+servers:
+  - url: http://kisusmister1.fvds.ru/api
+    description: Staging
+  - url: http://kisusmister.fvds.ru/api
+    description: Production
+
+tags:
+  - name: Аутентификация
+  - name: Товары
+  - name: Корзина
+  - name: Заказы
+  - name: Администрирование
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Описание ошибки
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            email:
+              type: string
+            name:
+              type: string
+            role:
+              type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        stock:
+          type: integer
+        category:
+          type: string
+        image:
+          type: string
+        active:
+          type: integer
+
+paths:
+
+  /auth/register:
+    post:
+      tags: [Аутентификация]
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+      responses:
+        200:
+          description: Пользователь зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags: [Аутентификация]
+      summary: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          description: Неверные учетные данные
+
+  /auth/me:
+    get:
+      tags: [Аутентификация]
+      summary: Текущий пользователь
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Данные пользователя
+
+  /products:
+    get:
+      tags: [Товары]
+      summary: Получение списка товаров
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [price_asc, price_desc, name]
+      responses:
+        200:
+          description: Список товаров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /products/{id}:
+    get:
+      tags: [Товары]
+      summary: Получение товара по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Товар
+        404:
+          description: Товар не найден
+
+  /cart:
+    get:
+      tags: [Корзина]
+      summary: Получение корзины
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Корзина пользователя
+
+  /cart/add:
+    post:
+      tags: [Корзина]
+      summary: Добавление товара в корзину
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, quantity]
+              properties:
+                productId:
+                  type: integer
+                quantity:
+                  type: integer
+      responses:
+        200:
+          description: Товар добавлен
+
+  /orders/checkout:
+    post:
+      tags: [Заказы]
+      summary: Оформление заказа
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shippingAddress, cardNumber, cardExpiry, cardCvc]
+              properties:
+                shippingAddress:
+                  type: string
+                cardNumber:
+                  type: string
+                cardExpiry:
+                  type: string
+                cardCvc:
+                  type: string
+      responses:
+        200:
+          description: Заказ оформлен
+
+  /admin/stats:
+    get:
+      tags: [Администрирование]
+      summary: Получение статистики
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Статистика системы
