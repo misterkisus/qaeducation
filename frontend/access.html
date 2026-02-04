@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Доступ к сайту</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .access-container {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+        }
+        
+        .lock-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+        }
+        
+        .lock-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .code-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.3rem;
+            text-align: center;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+        
+        .code-input.error {
+            border-color: #e74c3c;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            padding: 12px;
+            background: #ffeaea;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .error-message.visible {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .footer-text {
+            margin-top: 30px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+        
+        .footer-text i {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-container">
+        <div class="lock-icon">
+            <i class="fas fa-lock"></i>
+        </div>
+        
+        <h1>Доступ ограничен</h1>
+        <p class="subtitle">Введите код доступа для входа на сайт</p>
+        
+        <form id="access-form">
+            <div class="form-group">
+                <label for="access-code">Код доступа</label>
+                <input 
+                    type="text" 
+                    id="access-code" 
+                    class="code-input" 
+                    placeholder="••••••"
+                    maxlength="20"
+                    autocomplete="off"
+                    autofocus
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submit-btn">
+                <i class="fas fa-unlock-alt"></i>
+                Войти
+            </button>
+            
+            <div class="error-message" id="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="error-text">Неверный код доступа</span>
+            </div>
+        </form>
+        
+        <p class="footer-text">
+            <i class="fas fa-shield-alt"></i>
+            Сайт защищён для учебных целей
+        </p>
+    </div>
+
+    <script>
+        const form = document.getElementById('access-form');
+        const codeInput = document.getElementById('access-code');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+
+        // Автоматически убираем пробелы и делаем uppercase при вводе
+        codeInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\s/g, '').toUpperCase();
+            this.classList.remove('error');
+            errorMessage.classList.remove('visible');
+        });
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const code = codeInput.value.trim();
+            
+            if (!code) {
+                showError('Введите код доступа');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверка...';
+            
+            try {
+                const response = await fetch('/api/access/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> Доступ разрешён!';
+                    submitBtn.style.background = '#27ae60';
+                    
+                    // Редирект на главную
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 500);
+                } else {
+                    showError(data.error || 'Неверный код доступа');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-unlock-alt"></i> Войти';
+                }
+            } catch (error) {
+                showError('Ошибка соединения с сервером');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-unlock-alt"></i> Войти';
+            }
+        });
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('visible');
+            codeInput.classList.add('error');
+            codeInput.focus();
+        }
+
+        // Проверяем, может уже есть доступ
+        (async function checkExistingAccess() {
+            try {
+                const response = await fetch('/api/access/check');
+                const data = await response.json();
+                
+                if (data.hasAccess) {
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                // Игнорируем ошибки
+            }
+        })();
+    </script>
+</body>
+</html>
