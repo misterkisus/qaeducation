@@ -145,6 +145,26 @@ paths:
         200:
           description: Данные пользователя
 
+  /auth/expire:
+    post:
+      tags: [Аутентификация]
+      summary: Протухление сессии по authToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authToken]
+              properties:
+                authToken:
+                  type: string
+      responses:
+        200:
+          description: Сессия протухла
+        400:
+          description: Ошибка валидации
+
   /products:
     get:
       tags: [Товары]

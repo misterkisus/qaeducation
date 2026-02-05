@@ -14,6 +14,7 @@ const app = express();
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'qa-training-secret-2024';
+const REVOKED_TOKENS = new Set();
 
 // ===== СЕКРЕТНЫЙ КОД ДЛЯ ДОСТУПА К САЙТУ =====
 const SITE_ACCESS_CODE = 'PIZDUK';
@@ -161,6 +162,9 @@ const DATA = {
 // ============ MIDDLEWARE ============
 const auth = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
+    if (REVOKED_TOKENS.has(token)) {
+        return res.status(401).json({ error: 'РўРѕРєРµРЅ РёСЃС‚С‘Рє' });
+    }
     if (!token) return res.status(401).json({ error: 'Требуется авторизация' });
     try {
         req.user = jwt.verify(token, JWT_SECRET);
@@ -214,6 +218,15 @@ app.get('/api/auth/me', auth, (req, res) => {
     const user = DATA.users.find(u => u.id === req.user.id);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
     res.json({ id: user.id, email: user.email, name: user.name, role: user.role });
+});
+
+app.post('/api/auth/expire', (req, res) => {
+    const { authToken } = req.body || {};
+    if (!authToken) {
+        return res.status(400).json({ error: 'authToken обязателен' });
+    }
+    REVOKED_TOKENS.add(authToken);
+    res.json({ message: 'Сессия протухла' });
 });
 
 // ============ PRODUCTS ROUTES ============
