@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аналитика избранного - Админ-панель</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: var(--white);
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .stat-box .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .stat-box .label {
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        .top-products {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 25px;
+        }
+        .top-products h3 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .top-product-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .top-product-item:last-child {
+            border-bottom: none;
+        }
+        .rank {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        .rank.gold { background: #ffd700; color: #333; }
+        .rank.silver { background: #c0c0c0; color: #333; }
+        .rank.bronze { background: #cd7f32; color: white; }
+        .top-product-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .top-product-info {
+            flex: 1;
+        }
+        .top-product-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        .top-product-name.inactive {
+            color: #999;
+            text-decoration: line-through;
+        }
+        .top-product-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .wishlist-count-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo"><i class="fas fa-shopping-bag"></i> TechShop</a>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <nav class="admin-menu">
+                <a href="/pages/admin/dashboard.html"><i class="fas fa-chart-line"></i> Дашборд</a>
+                <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Товары</a>
+                <a href="/pages/admin/orders.html"><i class="fas fa-shopping-bag"></i> Заказы</a>
+                <a href="/pages/admin/promocodes.html"><i class="fas fa-ticket-alt"></i> Промокоды</a>
+                <a href="/pages/admin/wishlist.html" class="active"><i class="fas fa-heart"></i> Избранное</a>
+                <a href="/"><i class="fas fa-store"></i> На сайт</a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            <div class="admin-header">
+                <h1><i class="fas fa-heart" style="color: #e74c3c;"></i> Аналитика избранного</h1>
+            </div>
+
+            <div class="stats-row" id="stats-row">
+                <div class="stat-box">
+                    <div class="number">-</div>
+                    <div class="label">Всего добавлений</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">-</div>
+                    <div class="label">Уникальных товаров</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">-</div>
+                    <div class="label">Пользователей</div>
+                </div>
+            </div>
+
+            <div class="top-products">
+                <h3><i class="fas fa-fire" style="color: #ff6b6b;"></i> Топ-10 популярных товаров</h3>
+                <div id="top-products-list">
+                    <p style="color: var(--text-light);">Загрузка...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function loadWishlistStats() {
+            try {
+                const res = await apiRequest('/admin/wishlist/stats');
+                const data = await res.json();
+                
+                // Обновляем статистику
+                document.getElementById('stats-row').innerHTML = `
+                    <div class="stat-box">
+                        <div class="number">${data.totalItems}</div>
+                        <div class="label">Всего добавлений</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number">${data.uniqueProducts}</div>
+                        <div class="label">Уникальных товаров</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number">${data.uniqueUsers}</div>
+                        <div class="label">Пользователей</div>
+                    </div>
+                `;
+                
+                // Топ товаров
+                const listContainer = document.getElementById('top-products-list');
+                
+                if (data.topProducts.length === 0) {
+                    listContainer.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 30px;">Нет данных</p>';
+                    return;
+                }
+                
+                listContainer.innerHTML = data.topProducts.map((p, index) => {
+                    let rankClass = '';
+                    if (index === 0) rankClass = 'gold';
+                    else if (index === 1) rankClass = 'silver';
+                    else if (index === 2) rankClass = 'bronze';
+                    
+                    const isInactive = p.product_active === 0;
+                    
+                    return `
+                        <div class="top-product-item">
+                            <div class="rank ${rankClass}">${index + 1}</div>
+                            <img src="${p.product_image || 'https://via.placeholder.com/50'}" 
+                                 class="top-product-image" 
+                                 onerror="this.src='https://via.placeholder.com/50'"
+                                 alt="">
+                            <div class="top-product-info">
+                                <div class="top-product-name ${isInactive ? 'inactive' : ''}">${p.product_name}</div>
+                                <div class="top-product-meta">ID: ${p.product_id} ${isInactive ? '(удалён)' : ''}</div>
+                            </div>
+                            <span class="wishlist-count-badge">
+                                <i class="fas fa-heart"></i> ${p.count}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (e) {
+                console.error('Failed to load wishlist stats:', e);
+                showToast('Ошибка загрузки статистики', 'error');
+            }
+        }
+        
+        // Init
+        checkAuth();
+        loadWishlistStats();
+    </script>
+</body>
+</html>
