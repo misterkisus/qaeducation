@@ -69,12 +69,21 @@ function createProductCard(p) {
                 </button>`;
     
     return `<div class="product-card">
-        <img src="${p.image}" alt="${p.name}" class="product-image" 
-             onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
-          <div class="product-info">
-              <div class="product-name" data-tooltip="${p.name}">
-                  <span class="product-name__text">${p.name}</span>
-              </div>
+        <div style="position: relative;">
+            <img src="${p.image}" alt="${p.name}" class="product-image" 
+                 onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+            <button class="wishlist-btn" onclick="event.preventDefault(); toggleWishlist(${p.id}, this)" 
+                    title="Добавить в избранное"
+                    style="position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; 
+                           border-radius: 50%; border: none; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                           cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="far fa-heart" style="color: #e74c3c; font-size: 1.1rem;"></i>
+            </button>
+        </div>
+        <div class="product-info">
+            <div class="product-name" data-tooltip="${p.name}">
+                <span class="product-name__text">${p.name}</span>
+            </div>
             <div class="product-category">${p.category}</div>
             <div class="product-price">${formatPrice(p.price)}</div>
             <div class="product-stock ${stockClass}">${stockText}</div>
@@ -153,5 +162,47 @@ async function addToCart(productId) {
     } catch (e) { 
         console.error('Add to cart error:', e);
         showToast('Ошибка соединения', 'error'); 
+    }
+}
+
+// BUG #16 & #18: Нет защиты от двойного клика и счётчик не обновляется автоматически
+async function toggleWishlist(productId, btn) {
+    if (!authToken) {
+        showToast('Войдите, чтобы добавить в избранное', 'warning');
+        window.location.href = '/pages/login.html';
+        return;
+    }
+    
+    const icon = btn.querySelector('i');
+    const isInWishlist = icon.classList.contains('fas');
+    
+    try {
+        if (isInWishlist) {
+            // Удаляем из избранного
+            const res = await apiRequest(`/wishlist/product/${productId}`, { method: 'DELETE' });
+            if (res.ok) {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                showToast('Удалено из избранного', 'success');
+            }
+        } else {
+            // Добавляем в избранное (БАГ: нет защиты от двойного клика)
+            const res = await apiRequest('/wishlist/add', {
+                method: 'POST',
+                body: JSON.stringify({ productId })
+            });
+            if (res.ok) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                showToast('Добавлено в избранное', 'success');
+            } else {
+                const data = await res.json();
+                showToast(data.error || 'Ошибка', 'error');
+            }
+        }
+        // BUG #18: Счётчик в шапке не обновляется!
+        // Правильно было бы: updateWishlistCount();
+    } catch (e) {
+        showToast('Ошибка соединения', 'error');
     }
 }
