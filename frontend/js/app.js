@@ -41,7 +41,7 @@ function updateAuthUI(user) {
     if (!el) return;
     if (user) {
         el.innerHTML = `<div class="user-menu">
-            <span>Привет, ${user.name}!</span>
+            <span class="user-name" title="${user.name}">Привет, ${user.name}!</span>
             ${user.role === 'admin' ? '<a href="/pages/admin/dashboard.html" class="btn btn-sm btn-outline">Админка</a>' : ''}
             <a href="/pages/orders.html" class="btn btn-sm btn-outline">Заказы</a>
             <button onclick="logout()" class="btn btn-sm btn-danger">Выйти</button>

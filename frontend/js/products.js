@@ -64,8 +64,10 @@ function createProductCard(p) {
     return `<div class="product-card">
         <img src="${p.image}" alt="${p.name}" class="product-image" 
              onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
-        <div class="product-info">
-            <div class="product-name">${p.name}</div>
+          <div class="product-info">
+              <div class="product-name" data-tooltip="${p.name}">
+                  <span class="product-name__text">${p.name}</span>
+              </div>
             <div class="product-category">${p.category}</div>
             <div class="product-price">${formatPrice(p.price)}</div>
             <div class="product-stock ${stockClass}">${stockText}</div>
