@@ -7,20 +7,252 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: var(--white); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); }
-        .product-page-image { width: 100%; height: 400px; object-fit: cover; border-radius: var(--radius); }
-        .product-page-title { font-size: 1.75rem; margin-bottom: 10px; }
-        .product-page-category { color: var(--text-light); margin-bottom: 20px; }
-        .product-page-price { font-size: 2rem; color: var(--primary); font-weight: bold; margin-bottom: 20px; }
-        .product-page-description { color: var(--text-light); line-height: 1.8; margin-bottom: 30px; }
-        .product-page-stock { margin-bottom: 20px; padding: 10px 15px; border-radius: var(--radius); display: inline-block; }
-        .product-page-stock.in-stock { background: #d4edda; color: #155724; }
-        .product-page-stock.low-stock { background: #fff3cd; color: #856404; }
-        .product-page-stock.out-of-stock { background: #f8d7da; color: #721c24; }
-        .quantity-selector { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .quantity-selector input { width: 80px; padding: 10px; text-align: center; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1.1rem; }
-        .add-to-cart-btn { padding: 15px 40px; font-size: 1.1rem; }
-        @media (max-width: 768px) { .product-page { grid-template-columns: 1fr; } }
+        .product-page {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .product-page-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: var(--radius);
+        }
+        .product-page-title {
+            font-size: 1.75rem;
+            margin-bottom: 10px;
+        }
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .product-rating .stars {
+            color: #ffc107;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+        .product-page-price {
+            font-size: 2rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .quantity-selector input {
+            width: 80px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1.1rem;
+        }
+        
+        /* Reviews Section */
+        .reviews-section {
+            margin-top: 40px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        /* Review Stats */
+        .reviews-stats {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+        }
+        .stats-average {
+            text-align: center;
+        }
+        .stats-average .big-number {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            line-height: 1;
+        }
+        .stats-average .stars {
+            color: #ffc107;
+            font-size: 1.3rem;
+            margin: 8px 0;
+            letter-spacing: 2px;
+        }
+        .stats-average .count {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .stats-bars {}
+        .stats-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .stats-bar-row .label {
+            width: 20px;
+            text-align: right;
+            font-weight: 500;
+        }
+        .stats-bar-row .star-icon {
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+        .stats-bar {
+            flex: 1;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .stats-bar-fill {
+            height: 100%;
+            background: #ffc107;
+            border-radius: 5px;
+        }
+        .stats-bar-row .count {
+            width: 30px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        /* Review Form */
+        .review-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+        }
+        .review-form h4 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .rating-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .rating-input label {
+            cursor: pointer;
+            font-size: 2rem;
+            color: #ddd;
+            transition: color 0.2s, transform 0.1s;
+        }
+        .rating-input label:hover {
+            transform: scale(1.2);
+        }
+        .rating-input input {
+            display: none;
+        }
+        .rating-input label:hover,
+        .rating-input label.active {
+            color: #ffc107;
+        }
+        .rating-input label.hovered {
+            color: #ffc107;
+        }
+        
+        /* Review List */
+        .review-item {
+            padding: 25px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .review-item:last-child {
+            border-bottom: none;
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .review-author {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .review-author .avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .review-date {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .review-stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .review-text {
+            line-height: 1.7;
+            color: var(--text);
+        }
+        .review-status {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .review-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .review-status.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .login-prompt {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+        }
+        .login-prompt a {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .product-page {
+                grid-template-columns: 1fr;
+            }
+            .reviews-stats {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -45,7 +277,28 @@
             </a>
             
             <div class="product-page" id="product-container">
-                <div style="text-align: center; padding: 50px;">Загрузка...</div>
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 15px;">Загрузка...</p>
+                </div>
+            </div>
+
+            <div class="reviews-section" id="reviews-section">
+                <div class="reviews-header">
+                    <h2><i class="fas fa-star" style="color: #ffc107;"></i> Отзывы покупателей</h2>
+                </div>
+                
+                <div id="reviews-stats"></div>
+                
+                <div id="review-form-container">
+                    <!-- Form or login prompt will be inserted here -->
+                </div>
+
+                <div id="reviews-list">
+                    <div style="text-align: center; padding: 30px;">
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка отзывов...
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -55,11 +308,11 @@
     <script src="/js/app.js"></script>
     <script>
         let currentProduct = null;
+        let selectedRating = 0;
 
+        // ============ LOAD PRODUCT ============
         async function loadProduct() {
-            const params = new URLSearchParams(window.location.search);
-            const productId = params.get('id');
-            
+            const productId = new URLSearchParams(window.location.search).get('id');
             if (!productId) {
                 window.location.href = '/';
                 return;
@@ -68,56 +321,54 @@
             const container = document.getElementById('product-container');
 
             try {
-                const response = await fetch(`/api/products/${productId}`);
+                const res = await fetch(`${API_URL}/products/${productId}`);
+                if (!res.ok) throw new Error('Not found');
                 
-                if (!response.ok) {
-                    container.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1/-1;">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <h3>Товар не найден</h3>
-                            <a href="/" class="btn btn-primary">Вернуться в каталог</a>
-                        </div>
-                    `;
-                    return;
-                }
-
-                currentProduct = await response.json();
+                currentProduct = await res.json();
+                const starsHtml = getStarsHtml(currentProduct.avgRating);
                 
                 let stockClass, stockText;
                 if (currentProduct.stock === 0) {
-                    stockClass = 'out-of-stock';
+                    stockClass = 'color: #f44336';
                     stockText = 'Нет в наличии';
                 } else if (currentProduct.stock < 10) {
-                    stockClass = 'low-stock';
-                    stockText = `Осталось всего ${currentProduct.stock} шт.`;
+                    stockClass = 'color: #ff9800';
+                    stockText = `Осталось ${currentProduct.stock} шт.`;
                 } else {
-                    stockClass = 'in-stock';
+                    stockClass = 'color: #4caf50';
                     stockText = `В наличии: ${currentProduct.stock} шт.`;
                 }
-
+                
                 container.innerHTML = `
                     <div>
-                        <img src="${currentProduct.image}" alt="${currentProduct.name}" class="product-page-image"
+                        <img src="${currentProduct.image}" alt="${currentProduct.name}" class="product-page-image" 
                              onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
                     </div>
                     <div>
                         <h1 class="product-page-title">${currentProduct.name}</h1>
-                        <div class="product-page-category">
+                        <div class="product-rating">
+                            <span class="stars">${starsHtml}</span>
+                            <span>${currentProduct.avgRating.toFixed(1)}</span>
+                            <span style="color: var(--text-light);">(${currentProduct.reviewsCount} отзывов)</span>
+                        </div>
+                        <div style="color: var(--text-light); margin-bottom: 15px;">
                             <i class="fas fa-tag"></i> ${currentProduct.category}
                         </div>
                         <div class="product-page-price">${formatPrice(currentProduct.price)}</div>
-                        <div class="product-page-stock ${stockClass}">
-                            <i class="fas fa-${currentProduct.stock > 0 ? 'check' : 'times'}"></i>
+                        <p style="color: var(--text-light); margin-bottom: 20px; line-height: 1.7;">
+                            ${currentProduct.description}
+                        </p>
+                        <p style="margin-bottom: 20px; ${stockClass}">
+                            <i class="fas fa-${currentProduct.stock > 0 ? 'check-circle' : 'times-circle'}"></i>
                             ${stockText}
-                        </div>
-                        <p class="product-page-description">${currentProduct.description || 'Описание отсутствует'}</p>
+                        </p>
                         
                         ${currentProduct.stock > 0 ? `
                             <div class="quantity-selector">
                                 <label>Количество:</label>
                                 <input type="number" id="quantity" value="1" min="1" max="${currentProduct.stock}">
                             </div>
-                            <button class="btn btn-primary add-to-cart-btn" onclick="addProductToCart()">
+                            <button class="btn btn-primary" onclick="addProductToCart()" style="padding: 15px 40px;">
                                 <i class="fas fa-cart-plus"></i> Добавить в корзину
                             </button>
                         ` : `
@@ -127,51 +378,313 @@
                         `}
                     </div>
                 `;
-
-                document.title = `${currentProduct.name} - TechShop`;
-
-            } catch (error) {
-                console.error('Error loading product:', error);
+                
+                document.title = currentProduct.name + ' - TechShop';
+                
+                // Загружаем отзывы и форму
+                loadReviewForm();
+                loadReviews(productId);
+                
+            } catch (e) {
+                console.error('Error loading product:', e);
                 container.innerHTML = `
                     <div class="empty-state" style="grid-column: 1/-1;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Ошибка загрузки</h3>
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Товар не найден</h3>
                         <a href="/" class="btn btn-primary">Вернуться в каталог</a>
                     </div>
                 `;
             }
         }
 
-        async function addProductToCart() {
-            if (!currentProduct) return;
-
+        // ============ LOAD REVIEW FORM ============
+        function loadReviewForm() {
+            const container = document.getElementById('review-form-container');
+            
             if (!authToken) {
-                showToast('Войдите для добавления в корзину', 'warning');
+                container.innerHTML = `
+                    <div class="login-prompt">
+                        <p><a href="/pages/login.html">Войдите</a>, чтобы оставить отзыв</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="review-form">
+                    <h4><i class="fas fa-pen"></i> Написать отзыв</h4>
+                    <form id="review-form">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Ваша оценка *</label>
+                            <div class="rating-input" id="rating-input">
+                                <label data-rating="1" title="Ужасно">★</label>
+                                <label data-rating="2" title="Плохо">★</label>
+                                <label data-rating="3" title="Нормально">★</label>
+                                <label data-rating="4" title="Хорошо">★</label>
+                                <label data-rating="5" title="Отлично">★</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="review-text">Ваш отзыв *</label>
+                            <textarea id="review-text" rows="4" placeholder="Расскажите о своём опыте использования товара..." required minlength="3" maxlength="1000"></textarea>
+                            <small style="color: var(--text-light);">От 3 до 1000 символов</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="submit-review-btn">
+                            <i class="fas fa-paper-plane"></i> Отправить отзыв
+                        </button>
+                    </form>
+                </div>
+            `;
+            
+            // Инициализируем обработчики рейтинга
+            initRatingInput();
+            
+            // Обработчик формы
+            document.getElementById('review-form').addEventListener('submit', submitReview);
+        }
+
+        // ============ RATING INPUT ============
+        function initRatingInput() {
+            const ratingInput = document.getElementById('rating-input');
+            if (!ratingInput) return;
+            
+            const labels = ratingInput.querySelectorAll('label');
+            
+            // Клик по звезде
+            labels.forEach(label => {
+                label.addEventListener('click', function() {
+                    selectedRating = parseInt(this.dataset.rating);
+                    updateRatingDisplay();
+                });
+            });
+            
+            // Ховер эффект
+            labels.forEach(label => {
+                label.addEventListener('mouseenter', function() {
+                    const hoverRating = parseInt(this.dataset.rating);
+                    labels.forEach((l, i) => {
+                        l.classList.toggle('hovered', i < hoverRating);
+                    });
+                });
+            });
+            
+            ratingInput.addEventListener('mouseleave', function() {
+                labels.forEach(l => l.classList.remove('hovered'));
+            });
+        }
+        
+        function updateRatingDisplay() {
+            const labels = document.querySelectorAll('#rating-input label');
+            labels.forEach((l, i) => {
+                l.classList.toggle('active', i < selectedRating);
+            });
+        }
+
+        // ============ SUBMIT REVIEW ============
+        async function submitReview(e) {
+            e.preventDefault();
+            
+            if (selectedRating === 0) {
+                showToast('Выберите оценку', 'error');
+                return;
+            }
+            
+            const text = document.getElementById('review-text').value.trim();
+            if (text.length < 3) {
+                showToast('Отзыв слишком короткий', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('submit-review-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+            
+            try {
+                const res = await apiRequest('/reviews', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        productId: currentProduct.id,
+                        rating: selectedRating,
+                        text
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showToast('✓ Отзыв отправлен на модерацию!', 'success');
+                    
+                    // Очищаем форму
+                    document.getElementById('review-text').value = '';
+                    selectedRating = 0;
+                    updateRatingDisplay();
+                    
+                    // Перезагружаем отзывы
+                    loadReviews(currentProduct.id);
+                } else {
+                    showToast(data.error || 'Ошибка отправки отзыва', 'error');
+                }
+            } catch (e) {
+                console.error('Error submitting review:', e);
+                showToast('Ошибка соединения', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить отзыв';
+            }
+        }
+
+        // ============ LOAD REVIEWS ============
+        async function loadReviews(productId) {
+            try {
+                const res = await fetch(`${API_URL}/reviews/product/${productId}`);
+                const data = await res.json();
+                
+                // Отображаем статистику
+                renderReviewStats(data.stats);
+                
+                // Отображаем список отзывов
+                renderReviewsList(data.reviews);
+                
+            } catch (e) {
+                console.error('Failed to load reviews:', e);
+                document.getElementById('reviews-list').innerHTML = `
+                    <p style="color: #f44336; text-align: center;">Ошибка загрузки отзывов</p>
+                `;
+            }
+        }
+
+        function renderReviewStats(stats) {
+            const container = document.getElementById('reviews-stats');
+            
+            if (stats.total === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const starsHtml = getStarsHtml(stats.average);
+            
+            container.innerHTML = `
+                <div class="reviews-stats">
+                    <div class="stats-average">
+                        <div class="big-number">${stats.average.toFixed(1)}</div>
+                        <div class="stars">${starsHtml}</div>
+                        <div class="count">${stats.total} ${getReviewWord(stats.total)}</div>
+                    </div>
+                    <div class="stats-bars">
+                        ${[5, 4, 3, 2, 1].map(n => {
+                            const count = stats.distribution[n] || 0;
+                            const percent = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                            return `
+                                <div class="stats-bar-row">
+                                    <span class="label">${n}</span>
+                                    <span class="star-icon">★</span>
+                                    <div class="stats-bar">
+                                        <div class="stats-bar-fill" style="width: ${percent}%"></div>
+                                    </div>
+                                    <span class="count">${count}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderReviewsList(reviews) {
+            const container = document.getElementById('reviews-list');
+            
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <p style="color: var(--text-light); text-align: center; padding: 40px;">
+                        Пока нет отзывов. Будьте первым!
+                    </p>
+                `;
+                return;
+            }
+            
+            // BUG #12: Показываются все отзывы, включая pending и rejected
+            container.innerHTML = reviews.map(r => {
+                const starsHtml = getStarsHtml(r.rating);
+                const initial = r.user_name.charAt(0).toUpperCase();
+                const date = new Date(r.created_at).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                
+                // Показываем статус для не-approved отзывов
+                let statusBadge = '';
+                if (r.status === 'pending') {
+                    statusBadge = '<span class="review-status pending">На модерации</span>';
+                } else if (r.status === 'rejected') {
+                    statusBadge = '<span class="review-status rejected">Отклонён</span>';
+                }
+                
+                return `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="review-author">
+                                <span class="avatar">${initial}</span>
+                                ${r.user_name}
+                                ${statusBadge}
+                            </span>
+                            <span class="review-date">${date}</span>
+                        </div>
+                        <div class="review-stars">${starsHtml}</div>
+                        <div class="review-text">${r.text}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============ HELPERS ============
+        function getStarsHtml(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalf = rating % 1 >= 0.5;
+            const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
+            
+            return '★'.repeat(fullStars) + (hasHalf ? '½' : '') + '☆'.repeat(emptyStars);
+        }
+        
+        function getReviewWord(count) {
+            const lastDigit = count % 10;
+            const lastTwoDigits = count % 100;
+            
+            if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'отзывов';
+            if (lastDigit === 1) return 'отзыв';
+            if (lastDigit >= 2 && lastDigit <= 4) return 'отзыва';
+            return 'отзывов';
+        }
+
+        // ============ ADD TO CART ============
+        async function addProductToCart() {
+            if (!authToken) {
+                showToast('Войдите, чтобы добавить в корзину', 'warning');
                 window.location.href = '/pages/login.html';
                 return;
             }
-
+            
             const quantity = parseInt(document.getElementById('quantity').value) || 1;
-
+            
             try {
-                const response = await apiRequest('/cart/add', {
+                const res = await apiRequest('/cart/add', {
                     method: 'POST',
                     body: JSON.stringify({ productId: currentProduct.id, quantity })
                 });
-
-                if (response.ok) {
-                    showToast(`${currentProduct.name} добавлен в корзину`, 'success');
+                
+                if (res.ok) {
+                    showToast('Товар добавлен в корзину', 'success');
                     updateCartCount();
                 } else {
-                    const data = await response.json();
-                    showToast(data.error || 'Ошибка добавления', 'error');
+                    const data = await res.json();
+                    showToast(data.error || 'Ошибка', 'error');
                 }
-            } catch (error) {
+            } catch (e) {
                 showToast('Ошибка соединения', 'error');
             }
         }
 
-        // Init
+        // ============ INIT ============
         checkAuth();
         loadProduct();
     </script>
