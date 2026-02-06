@@ -1,5 +1,6 @@
 backend/node_modules/.package-lock.json
 backend/node_modules/.package-lock.json
+backend/data/
 backend/node_modules/.bin/json2yaml
 backend/node_modules/.bin/json2yaml.cmd
 backend/node_modules/.bin/json2yaml.ps1
