@@ -333,7 +333,11 @@ app.get('/api/products', (req, res) => {
     }
     if (req.query.search) {
         const s = req.query.search.toLowerCase();
-        products = products.filter(p => p.name.toLowerCase().includes(s) || p.description.toLowerCase().includes(s));
+        products = products.filter(p =>
+            p.name.toLowerCase().includes(s) ||
+            p.description.toLowerCase().includes(s) ||
+            (p.category || '').toLowerCase().includes(s)
+        );
     }
     if (req.query.sort === 'price_asc') products.sort((a, b) => a.price - b.price);
     else if (req.query.sort === 'price_desc') products.sort((a, b) => b.price - a.price);

@@ -16,8 +16,8 @@ router.get('/', (req, res) => {
     }
 
     if (search) {
-        query += ' AND (name LIKE ? OR description LIKE ?)';
-        params.push(`%${search}%`, `%${search}%`);
+        query += ' AND (name LIKE ? OR description LIKE ? OR category LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     if (sort === 'price_asc') {
