@@ -21,7 +21,6 @@
                 <a href="/pages/admin/dashboard.html"><i class="fas fa-chart-line"></i> Дашборд</a>
                 <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Товары</a>
                 <a href="/pages/admin/orders.html" class="active"><i class="fas fa-shopping-bag"></i> Заказы</a>
-                <a href="/pages/admin/promocodes.html"><i class="fas fa-ticket-alt"></i> Промокоды</a>
                 <a href="/"><i class="fas fa-store"></i> На сайт</a>
             </nav>
         </aside>
@@ -38,13 +37,12 @@
                         <th>Клиент</th>
                         <th>Товары</th>
                         <th>Сумма</th>
-                        <th>Промокод</th>
                         <th>Статус</th>
                         <th>Дата</th>
                     </tr>
                 </thead>
                 <tbody id="orders-tbody">
-                    <tr><td colspan="7" style="text-align: center;">Загрузка...</td></tr>
+                    <tr><td colspan="6" style="text-align: center;">Загрузка...</td></tr>
                 </tbody>
             </table>
         </main>
@@ -62,7 +60,7 @@
                 const tbody = document.getElementById('orders-tbody');
                 
                 if (orders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">Нет заказов</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">Нет заказов</td></tr>';
                     return;
                 }
                 
@@ -80,7 +78,6 @@
                             <strong>${formatPrice(o.total)}</strong>
                             ${o.discount > 0 ? `<br><small style="color: #4caf50;">Скидка: -${formatPrice(o.discount)}</small>` : ''}
                         </td>
-                        <td>${o.promocode ? `<code>${o.promocode}</code>` : '—'}</td>
                         <td>
                             <select onchange="updateStatus(${o.id}, this.value)" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                 <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Ожидает</option>
