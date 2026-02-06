@@ -1,0 +1,251 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@shop.com",
+      "password": "$2a$10$0b3F/Udo6P.bNNLAZcZ2auleD71Znx4ZG0mnKbzd4kShixQW4MjkW",
+      "name": "Admin",
+      "role": "admin",
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 2,
+      "email": "user@test.com",
+      "password": "$2a$10$AZ5d4.iQfHEJ5JdtuH6BgufKvCKY1MtA/oPjYKbRhbiVfzhl9l0Nu",
+      "name": "Test User",
+      "role": "user",
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 3,
+      "email": "persist_test_1770382165144@example.com",
+      "password": "$2a$10$UbmcVqAl8sMm3c897rghauiBjpGct8ZUXpnb2eJ1AEV3JmOzZ01Ki",
+      "name": "Persist QA",
+      "role": "user",
+      "created_at": "2026-02-06T12:49:27.473Z"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Wireless Bluetooth Headphones",
+      "description": "High-quality wireless headphones with active noise cancellation. Battery life up to 30 hours. Bluetooth 5.0 connectivity.",
+      "price": 7999.99,
+      "stock": 50,
+      "category": "Electronics",
+      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 2,
+      "name": "Smart Watch Prosdfsdf",
+      "description": "Advanced smartwatch with heart rate monitoring, GPS tracking, sleep analysis. Water resistant up to 50m.",
+      "price": 199.99,
+      "stock": 30,
+      "category": "Electronics",
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 3,
+      "name": "Leather Laptop Bag",
+      "description": "Premium genuine leather laptop bag. Fits laptops up to 15.6 inches. Multiple compartments.",
+      "price": 89.99,
+      "stock": 25,
+      "category": "Accessories",
+      "image": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 4,
+      "name": "Mechanical Gaming Keyboard",
+      "description": "RGB backlit mechanical keyboard with Cherry MX Blue switches. Programmable macro keys.",
+      "price": 129.99,
+      "stock": 40,
+      "category": "Electronics",
+      "image": "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 5,
+      "name": "Portable Power Bank 20000mAh",
+      "description": "High capacity portable charger. Dual USB output. Fast charging support.",
+      "price": 39.99,
+      "stock": 100,
+      "category": "Electronics",
+      "image": "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 6,
+      "name": "Cotton T-Shirt Classic",
+      "description": "100% organic cotton t-shirt. Pre-shrunk fabric. Available in multiple colors.",
+      "price": 24.99,
+      "stock": 200,
+      "category": "Clothing",
+      "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 7,
+      "name": "Running Shoes Sport Max",
+      "description": "Lightweight running shoes with responsive cushioning. Breathable mesh upper.",
+      "price": 119.99,
+      "stock": 60,
+      "category": "Footwear",
+      "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 8,
+      "name": "Stainless Steel Water Bottle",
+      "description": "Double-wall vacuum insulated. Keeps drinks cold 24h or hot 12h. 750ml capacity.",
+      "price": 29.99,
+      "stock": 150,
+      "category": "Accessories",
+      "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 9,
+      "name": "Super Ultra Premium Deluxe Edition Professional Wireless Ergonomic Computer Mouse With RGB Lighting And Extra Buttons For Gaming",
+      "description": "Ergonomic wireless mouse with adjustable DPI. RGB lighting. 8 programmable buttons.",
+      "price": 59.99,
+      "stock": 45,
+      "category": "Electronics",
+      "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 10,
+      "name": "Yoga Mat Premium",
+      "description": "Non-slip yoga mat with alignment lines. 6mm thickness. Eco-friendly TPE material.",
+      "price": 34.99,
+      "stock": 80,
+      "category": "Sports",
+      "image": "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 11,
+      "name": "Wireless Earbuds Pro",
+      "description": "True wireless earbuds with ANC. Touch controls. 8 hours playback.",
+      "price": 149.99,
+      "stock": 3,
+      "category": "Electronics",
+      "image": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 12,
+      "name": "LED Desk Lamp",
+      "description": "Adjustable LED desk lamp. 5 brightness levels. USB charging port.",
+      "price": 44.99,
+      "stock": 0,
+      "category": "Home",
+      "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    }
+  ],
+  "cart": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "product_id": 1,
+      "quantity": 1
+    }
+  ],
+  "orders": [],
+  "orderItems": [],
+  "promocodes": [
+    {
+      "id": 1,
+      "code": "SAVE10",
+      "discount": 10,
+      "type": "percent",
+      "min_order": 0,
+      "max_uses": 100,
+      "used_count": 5,
+      "expires_at": "2025-12-31",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 2,
+      "code": "SAVE20",
+      "discount": 20,
+      "type": "percent",
+      "min_order": 100,
+      "max_uses": 50,
+      "used_count": 12,
+      "expires_at": "2025-06-30",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 3,
+      "code": "FLAT500",
+      "discount": 500,
+      "type": "fixed",
+      "min_order": 2000,
+      "max_uses": 30,
+      "used_count": 8,
+      "expires_at": "2025-03-31",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 4,
+      "code": "EXPIRED50",
+      "discount": 50,
+      "type": "percent",
+      "min_order": 0,
+      "max_uses": 100,
+      "used_count": 0,
+      "expires_at": "2023-01-01",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 5,
+      "code": "WELCOME",
+      "discount": 15,
+      "type": "percent",
+      "min_order": 0,
+      "max_uses": 1000,
+      "used_count": 234,
+      "expires_at": "2025-12-31",
+      "active": 0,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    },
+    {
+      "id": 6,
+      "code": "BUGGY150",
+      "discount": 150,
+      "type": "percent",
+      "min_order": 0,
+      "max_uses": 10,
+      "used_count": 0,
+      "expires_at": "2025-12-31",
+      "active": 1,
+      "created_at": "2026-02-06T12:49:25.727Z"
+    }
+  ],
+  "nextUserId": 4,
+  "nextProductId": 13,
+  "nextCartId": 2,
+  "nextOrderId": 1,
+  "nextPromocodeId": 7
+}
