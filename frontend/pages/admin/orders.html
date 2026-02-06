@@ -21,6 +21,7 @@
                 <a href="/pages/admin/dashboard.html"><i class="fas fa-chart-line"></i> Дашборд</a>
                 <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Товары</a>
                 <a href="/pages/admin/orders.html" class="active"><i class="fas fa-shopping-bag"></i> Заказы</a>
+                <a href="/pages/admin/promocodes.html"><i class="fas fa-ticket-alt"></i> Промокоды</a>
                 <a href="/"><i class="fas fa-store"></i> На сайт</a>
             </nav>
         </aside>
@@ -37,12 +38,14 @@
                         <th>Клиент</th>
                         <th>Товары</th>
                         <th>Сумма</th>
+                        <th>Промокод</th>
                         <th>Статус</th>
                         <th>Дата</th>
-                        <th>Действия</th>
                     </tr>
                 </thead>
-                <tbody id="orders-tbody"></tbody>
+                <tbody id="orders-tbody">
+                    <tr><td colspan="7" style="text-align: center;">Загрузка...</td></tr>
+                </tbody>
             </table>
         </main>
     </div>
@@ -57,6 +60,12 @@
                 const orders = await res.json();
                 
                 const tbody = document.getElementById('orders-tbody');
+                
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">Нет заказов</td></tr>';
+                    return;
+                }
+                
                 tbody.innerHTML = orders.map(o => `
                     <tr>
                         <td><strong>#${o.id}</strong></td>
@@ -64,15 +73,16 @@
                             <div>${o.user_name}</div>
                             <small style="color: var(--text-light);">${o.email}</small>
                         </td>
-                        <td>
-                            ${o.items.map(i => `${i.product_name} ×${i.quantity}`).join('<br>')}
+                        <td style="max-width: 250px;">
+                            ${o.items.map(i => `<div>${i.product_name} ×${i.quantity}</div>`).join('')}
                         </td>
                         <td>
                             <strong>${formatPrice(o.total)}</strong>
-                            ${o.discount > 0 ? `<br><small style="color: #4caf50;">-${formatPrice(o.discount)}</small>` : ''}
+                            ${o.discount > 0 ? `<br><small style="color: #4caf50;">Скидка: -${formatPrice(o.discount)}</small>` : ''}
                         </td>
+                        <td>${o.promocode ? `<code>${o.promocode}</code>` : '—'}</td>
                         <td>
-                            <select onchange="updateStatus(${o.id}, this.value)" style="padding: 5px; border-radius: 4px;">
+                            <select onchange="updateStatus(${o.id}, this.value)" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                 <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Ожидает</option>
                                 <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>В обработке</option>
                                 <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Отправлен</option>
@@ -81,15 +91,11 @@
                             </select>
                         </td>
                         <td>${formatDate(o.created_at)}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline" onclick="alert('Адрес: ${o.shipping_address}')">
-                                <i class="fas fa-info-circle"></i>
-                            </button>
-                        </td>
                     </tr>
                 `).join('');
             } catch (e) {
                 console.error('Failed to load orders:', e);
+                showToast('Ошибка загрузки заказов', 'error');
             }
         }
 
@@ -101,12 +107,17 @@
                 });
                 if (res.ok) {
                     showToast('Статус обновлён', 'success');
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Ошибка', 'error');
+                    loadOrders(); // Перезагрузить чтобы откатить изменение
                 }
             } catch (e) {
-                showToast('Ошибка', 'error');
+                showToast('Ошибка соединения', 'error');
             }
         }
 
+        // Init
         checkAuth();
         loadOrders();
     </script>

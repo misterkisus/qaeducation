@@ -267,6 +267,83 @@ paths:
         200:
           description: Заказ оформлен
 
+  /orders:
+    get:
+      tags: [Заказы]
+      summary: Получить заказы пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Список заказов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    user_id:
+                      type: integer
+                      example: 2
+                    total:
+                      type: number
+                      format: float
+                      example: 89.99
+                    discount:
+                      type: number
+                      format: float
+                      example: 10
+                    promocode:
+                      type: string
+                      nullable: true
+                      example: SAVE10
+                    status:
+                      type: string
+                      example: pending
+                    shipping_address:
+                      type: string
+                      example: Moscow, Tverskaya 1
+                    payment_method:
+                      type: string
+                      example: card
+                    card_last4:
+                      type: string
+                      example: "4242"
+                    created_at:
+                      type: string
+                      format: date-time
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          order_id:
+                            type: integer
+                            example: 1
+                          product_id:
+                            type: integer
+                            example: 3
+                          product_name:
+                            type: string
+                            example: Leather Laptop Bag
+                          quantity:
+                            type: integer
+                            example: 1
+                          price:
+                            type: number
+                            format: float
+                            example: 89.99
+        401:
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/stats:
     get:
       tags: [Администрирование]
