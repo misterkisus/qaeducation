@@ -524,7 +524,25 @@ body {
 .summary-row {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
     margin-bottom: 10px;
+}
+
+.summary-row > span {
+    min-width: 0;
+}
+
+.summary-row > span:first-child {
+    flex: 1 1 auto;
+}
+
+.summary-row > span:last-child {
+    flex: 1 1 auto;
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .summary-total {
