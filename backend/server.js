@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const swaggerUi = require('swagger-ui-express');
@@ -113,51 +114,144 @@ app.post('/api/access/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ IN-MEMORY DATABASE ============
-const DATA = {
-    users: [
-        { id: 1, email: 'admin@shop.com', password: '', name: 'Admin', role: 'admin', created_at: new Date().toISOString() },
-        { id: 2, email: 'user@test.com', password: '', name: 'Test User', role: 'user', created_at: new Date().toISOString() }
-    ],
-    products: [
-        { id: 1, name: 'Wireless Bluetooth Headphones', description: 'High-quality wireless headphones with active noise cancellation. Battery life up to 30 hours. Bluetooth 5.0 connectivity.', price: 79.99, stock: 50, category: 'Electronics', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 2, name: 'Smart Watch Pro', description: 'Advanced smartwatch with heart rate monitoring, GPS tracking, sleep analysis. Water resistant up to 50m.', price: 199.99, stock: 30, category: 'Electronics', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 3, name: 'Leather Laptop Bag', description: 'Premium genuine leather laptop bag. Fits laptops up to 15.6 inches. Multiple compartments.', price: 89.99, stock: 25, category: 'Accessories', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 4, name: 'Mechanical Gaming Keyboard', description: 'RGB backlit mechanical keyboard with Cherry MX Blue switches. Programmable macro keys.', price: 129.99, stock: 40, category: 'Electronics', image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 5, name: 'Portable Power Bank 20000mAh', description: 'High capacity portable charger. Dual USB output. Fast charging support.', price: 39.99, stock: 100, category: 'Electronics', image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 6, name: 'Cotton T-Shirt Classic', description: '100% organic cotton t-shirt. Pre-shrunk fabric. Available in multiple colors.', price: 24.99, stock: 200, category: 'Clothing', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 7, name: 'Running Shoes Sport Max', description: 'Lightweight running shoes with responsive cushioning. Breathable mesh upper.', price: 119.99, stock: 60, category: 'Footwear', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 8, name: 'Stainless Steel Water Bottle', description: 'Double-wall vacuum insulated. Keeps drinks cold 24h or hot 12h. 750ml capacity.', price: 29.99, stock: 150, category: 'Accessories', image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 9, name: 'Super Ultra Premium Deluxe Edition Professional Wireless Ergonomic Computer Mouse With RGB Lighting And Extra Buttons For Gaming', description: 'Ergonomic wireless mouse with adjustable DPI. RGB lighting. 8 programmable buttons.', price: 59.99, stock: 45, category: 'Electronics', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 10, name: 'Yoga Mat Premium', description: 'Non-slip yoga mat with alignment lines. 6mm thickness. Eco-friendly TPE material.', price: 34.99, stock: 80, category: 'Sports', image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 11, name: 'Wireless Earbuds Pro', description: 'True wireless earbuds with ANC. Touch controls. 8 hours playback.', price: 149.99, stock: 3, category: 'Electronics', image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400', active: 1, created_at: new Date().toISOString() },
-        { id: 12, name: 'LED Desk Lamp', description: 'Adjustable LED desk lamp. 5 brightness levels. USB charging port.', price: 44.99, stock: 0, category: 'Home', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400', active: 1, created_at: new Date().toISOString() }
-    ],
-    cart: [],
-    orders: [],
-    orderItems: [],
-    
-    promocodes: [
-        { id: 1, code: 'SAVE10', discount: 10, type: 'percent', min_order: 0, max_uses: 100, used_count: 5, expires_at: '2025-12-31', active: 1, created_at: new Date().toISOString() },
-        { id: 2, code: 'SAVE20', discount: 20, type: 'percent', min_order: 100, max_uses: 50, used_count: 12, expires_at: '2025-06-30', active: 1, created_at: new Date().toISOString() },
-        { id: 3, code: 'FLAT500', discount: 500, type: 'fixed', min_order: 2000, max_uses: 30, used_count: 8, expires_at: '2025-03-31', active: 1, created_at: new Date().toISOString() },
-        { id: 4, code: 'EXPIRED50', discount: 50, type: 'percent', min_order: 0, max_uses: 100, used_count: 0, expires_at: '2023-01-01', active: 1, created_at: new Date().toISOString() },
-        { id: 5, code: 'WELCOME', discount: 15, type: 'percent', min_order: 0, max_uses: 1000, used_count: 234, expires_at: '2025-12-31', active: 0, created_at: new Date().toISOString() },
-        { id: 6, code: 'BUGGY150', discount: 150, type: 'percent', min_order: 0, max_uses: 10, used_count: 0, expires_at: '2025-12-31', active: 1, created_at: new Date().toISOString() }
-    ],
-    
-    nextUserId: 3,
-    nextProductId: 13,
-    nextCartId: 1,
-    nextOrderId: 1,
-    nextPromocodeId: 7
-};
+// ============ PERSISTENT DATA STORAGE ============
+const DATA_FILE = path.join(__dirname, 'data', 'store.json');
 
-// Hash passwords on startup
-(async () => {
-    DATA.users[0].password = await bcrypt.hash('admin123', 10);
-    DATA.users[1].password = await bcrypt.hash('user123', 10);
-})();
+function createDefaultData() {
+    return {
+        users: [
+            { id: 1, email: 'admin@shop.com', password: '', name: 'Admin', role: 'admin', created_at: new Date().toISOString() },
+            { id: 2, email: 'user@test.com', password: '', name: 'Test User', role: 'user', created_at: new Date().toISOString() }
+        ],
+        products: [
+            { id: 1, name: 'Wireless Bluetooth Headphones', description: 'High-quality wireless headphones with active noise cancellation. Battery life up to 30 hours. Bluetooth 5.0 connectivity.', price: 79.99, stock: 50, category: 'Electronics', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 2, name: 'Smart Watch Pro', description: 'Advanced smartwatch with heart rate monitoring, GPS tracking, sleep analysis. Water resistant up to 50m.', price: 199.99, stock: 30, category: 'Electronics', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 3, name: 'Leather Laptop Bag', description: 'Premium genuine leather laptop bag. Fits laptops up to 15.6 inches. Multiple compartments.', price: 89.99, stock: 25, category: 'Accessories', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 4, name: 'Mechanical Gaming Keyboard', description: 'RGB backlit mechanical keyboard with Cherry MX Blue switches. Programmable macro keys.', price: 129.99, stock: 40, category: 'Electronics', image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 5, name: 'Portable Power Bank 20000mAh', description: 'High capacity portable charger. Dual USB output. Fast charging support.', price: 39.99, stock: 100, category: 'Electronics', image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 6, name: 'Cotton T-Shirt Classic', description: '100% organic cotton t-shirt. Pre-shrunk fabric. Available in multiple colors.', price: 24.99, stock: 200, category: 'Clothing', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 7, name: 'Running Shoes Sport Max', description: 'Lightweight running shoes with responsive cushioning. Breathable mesh upper.', price: 119.99, stock: 60, category: 'Footwear', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 8, name: 'Stainless Steel Water Bottle', description: 'Double-wall vacuum insulated. Keeps drinks cold 24h or hot 12h. 750ml capacity.', price: 29.99, stock: 150, category: 'Accessories', image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 9, name: 'Super Ultra Premium Deluxe Edition Professional Wireless Ergonomic Computer Mouse With RGB Lighting And Extra Buttons For Gaming', description: 'Ergonomic wireless mouse with adjustable DPI. RGB lighting. 8 programmable buttons.', price: 59.99, stock: 45, category: 'Electronics', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 10, name: 'Yoga Mat Premium', description: 'Non-slip yoga mat with alignment lines. 6mm thickness. Eco-friendly TPE material.', price: 34.99, stock: 80, category: 'Sports', image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 11, name: 'Wireless Earbuds Pro', description: 'True wireless earbuds with ANC. Touch controls. 8 hours playback.', price: 149.99, stock: 3, category: 'Electronics', image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400', active: 1, created_at: new Date().toISOString() },
+            { id: 12, name: 'LED Desk Lamp', description: 'Adjustable LED desk lamp. 5 brightness levels. USB charging port.', price: 44.99, stock: 0, category: 'Home', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400', active: 1, created_at: new Date().toISOString() }
+        ],
+        cart: [],
+        orders: [],
+        orderItems: [],
+        promocodes: [
+            { id: 1, code: 'SAVE10', discount: 10, type: 'percent', min_order: 0, max_uses: 100, used_count: 5, expires_at: '2025-12-31', active: 1, created_at: new Date().toISOString() },
+            { id: 2, code: 'SAVE20', discount: 20, type: 'percent', min_order: 100, max_uses: 50, used_count: 12, expires_at: '2025-06-30', active: 1, created_at: new Date().toISOString() },
+            { id: 3, code: 'FLAT500', discount: 500, type: 'fixed', min_order: 2000, max_uses: 30, used_count: 8, expires_at: '2025-03-31', active: 1, created_at: new Date().toISOString() },
+            { id: 4, code: 'EXPIRED50', discount: 50, type: 'percent', min_order: 0, max_uses: 100, used_count: 0, expires_at: '2023-01-01', active: 1, created_at: new Date().toISOString() },
+            { id: 5, code: 'WELCOME', discount: 15, type: 'percent', min_order: 0, max_uses: 1000, used_count: 234, expires_at: '2025-12-31', active: 0, created_at: new Date().toISOString() },
+            { id: 6, code: 'BUGGY150', discount: 150, type: 'percent', min_order: 0, max_uses: 10, used_count: 0, expires_at: '2025-12-31', active: 1, created_at: new Date().toISOString() }
+        ],
+        nextUserId: 3,
+        nextProductId: 13,
+        nextCartId: 1,
+        nextOrderId: 1,
+        nextPromocodeId: 7
+    };
+}
+
+function nextIdFrom(items) {
+    return items.reduce((max, item) => {
+        const id = Number(item?.id) || 0;
+        return id > max ? id : max;
+    }, 0) + 1;
+}
+
+function normalizeDataShape(rawData) {
+    const defaults = createDefaultData();
+    const data = rawData && typeof rawData === 'object' ? rawData : {};
+
+    const normalized = {
+        users: Array.isArray(data.users) ? data.users : defaults.users,
+        products: Array.isArray(data.products) ? data.products : defaults.products,
+        cart: Array.isArray(data.cart) ? data.cart : defaults.cart,
+        orders: Array.isArray(data.orders) ? data.orders : defaults.orders,
+        orderItems: Array.isArray(data.orderItems) ? data.orderItems : defaults.orderItems,
+        promocodes: Array.isArray(data.promocodes) ? data.promocodes : defaults.promocodes,
+        nextUserId: Number.isInteger(data.nextUserId) ? data.nextUserId : nextIdFrom(Array.isArray(data.users) ? data.users : defaults.users),
+        nextProductId: Number.isInteger(data.nextProductId) ? data.nextProductId : nextIdFrom(Array.isArray(data.products) ? data.products : defaults.products),
+        nextCartId: Number.isInteger(data.nextCartId) ? data.nextCartId : nextIdFrom(Array.isArray(data.cart) ? data.cart : defaults.cart),
+        nextOrderId: Number.isInteger(data.nextOrderId) ? data.nextOrderId : nextIdFrom(Array.isArray(data.orders) ? data.orders : defaults.orders),
+        nextPromocodeId: Number.isInteger(data.nextPromocodeId) ? data.nextPromocodeId : nextIdFrom(Array.isArray(data.promocodes) ? data.promocodes : defaults.promocodes)
+    };
+
+    return normalized;
+}
+
+function ensureUserPasswords(data) {
+    data.users.forEach((user) => {
+        if (typeof user.password === 'string' && user.password.startsWith('$2')) {
+            return;
+        }
+
+        if (!user.password) {
+            if (user.email === 'admin@shop.com') {
+                user.password = bcrypt.hashSync('admin123', 10);
+            } else if (user.email === 'user@test.com') {
+                user.password = bcrypt.hashSync('user123', 10);
+            } else {
+                user.password = bcrypt.hashSync('user123', 10);
+            }
+            return;
+        }
+
+        user.password = bcrypt.hashSync(String(user.password), 10);
+    });
+}
+
+function writeDataFile(payload) {
+    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+    fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
+}
+
+function saveData(payload = DATA) {
+    try {
+        writeDataFile(payload);
+        return true;
+    } catch (error) {
+        console.error('Failed to persist data:', error);
+        return false;
+    }
+}
+
+function loadData() {
+    try {
+        if (!fs.existsSync(DATA_FILE)) {
+            const defaults = createDefaultData();
+            ensureUserPasswords(defaults);
+            writeDataFile(defaults);
+            return defaults;
+        }
+
+        const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        const normalized = normalizeDataShape(parsed);
+        ensureUserPasswords(normalized);
+        writeDataFile(normalized);
+        return normalized;
+    } catch (error) {
+        console.error('Failed to load persisted data, reset to defaults:', error);
+        const defaults = createDefaultData();
+        ensureUserPasswords(defaults);
+        writeDataFile(defaults);
+        return defaults;
+    }
+}
+
+function persistOr500(res) {
+    if (saveData()) {
+        return true;
+    }
+    res.status(500).json({ error: 'Failed to persist data' });
+    return false;
+}
+
+const DATA = loadData();
 
 // ============ MIDDLEWARE ============
 const auth = (req, res, next) => {
@@ -197,7 +291,8 @@ app.post('/api/auth/register', async (req, res) => {
         created_at: new Date().toISOString()
     };
     DATA.users.push(user);
-    
+    if (!persistOr500(res)) return;
+
     const token = jwt.sign({ id: user.id, email, role: 'user' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ message: 'Регистрация успешна', token, user: { id: user.id, email, name: user.name, role: 'user' } });
 });
@@ -295,6 +390,7 @@ app.post('/api/cart/add', auth, (req, res) => {
     } else {
         DATA.cart.push({ id: DATA.nextCartId++, user_id: req.user.id, product_id: productId, quantity });
     }
+    if (!persistOr500(res)) return;
     res.json({ message: 'Товар добавлен в корзину' });
 });
 
@@ -305,6 +401,7 @@ app.put('/api/cart/:id', auth, (req, res) => {
     const newQuantity = parseInt(req.body.quantity);
     if (newQuantity <= 0) {
         DATA.cart = DATA.cart.filter(c => c.id !== item.id);
+        if (!persistOr500(res)) return;
         return res.json({ message: 'Товар удалён из корзины' });
     }
     
@@ -314,11 +411,13 @@ app.put('/api/cart/:id', auth, (req, res) => {
     }
     
     item.quantity = newQuantity;
+    if (!persistOr500(res)) return;
     res.json({ message: 'Корзина обновлена' });
 });
 
 app.delete('/api/cart/:id', auth, (req, res) => {
     DATA.cart = DATA.cart.filter(c => !(c.id === parseInt(req.params.id) && c.user_id === req.user.id));
+    if (!persistOr500(res)) return;
     res.json({ message: 'Товар удалён' });
 });
 
@@ -488,6 +587,7 @@ app.post('/api/orders/checkout', auth, (req, res) => {
     });
     
     DATA.cart = DATA.cart.filter(c => c.user_id !== req.user.id);
+    if (!persistOr500(res)) return;
     
     res.json({ 
         message: 'Заказ успешно оформлен', 
@@ -551,6 +651,7 @@ app.post('/api/admin/products', auth, adminOnly, (req, res) => {
         created_at: new Date().toISOString()
     };
     DATA.products.push(product);
+    if (!persistOr500(res)) return;
     res.json({ id: product.id, message: 'Товар создан' });
 });
 
@@ -567,6 +668,7 @@ app.put('/api/admin/products/:id', auth, adminOnly, (req, res) => {
     if (category !== undefined) product.category = category.trim();
     if (image !== undefined) product.image = image.trim();
     if (active !== undefined) product.active = active ? 1 : 0;
+    if (!persistOr500(res)) return;
     
     res.json({ message: 'Товар обновлён' });
 });
@@ -574,6 +676,7 @@ app.put('/api/admin/products/:id', auth, adminOnly, (req, res) => {
 app.delete('/api/admin/products/:id', auth, adminOnly, (req, res) => {
     const product = DATA.products.find(p => p.id === parseInt(req.params.id));
     if (product) product.active = 0;
+    if (!persistOr500(res)) return;
     res.json({ message: 'Товар удалён' });
 });
 
@@ -603,6 +706,7 @@ app.put('/api/admin/orders/:id/status', auth, adminOnly, (req, res) => {
     }
     
     order.status = status;
+    if (!persistOr500(res)) return;
     res.json({ message: 'Статус заказа обновлён' });
 });
 
@@ -639,6 +743,7 @@ app.post('/api/admin/promocodes', auth, adminOnly, (req, res) => {
     };
     
     DATA.promocodes.push(promo);
+    if (!persistOr500(res)) return;
     res.json({ id: promo.id, message: 'Промокод создан' });
 });
 
@@ -654,6 +759,7 @@ app.put('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
     if (max_uses !== undefined) promo.max_uses = parseInt(max_uses);
     if (expires_at !== undefined) promo.expires_at = expires_at;
     if (active !== undefined) promo.active = active ? 1 : 0;
+    if (!persistOr500(res)) return;
     
     res.json({ message: 'Промокод обновлён' });
 });
@@ -663,6 +769,7 @@ app.delete('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
     if (index === -1) return res.status(404).json({ error: 'Промокод не найден' });
     
     DATA.promocodes.splice(index, 1);
+    if (!persistOr500(res)) return;
     res.json({ message: 'Промокод удалён' });
 });
 
@@ -694,3 +801,4 @@ app.listen(PORT, () => {
     console.log('╚═══════════════════════════════════════════════════════════╝');
     console.log('');
 });
+
