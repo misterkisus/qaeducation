@@ -142,3 +142,4 @@ backend/node_modules/yamljs/test/spec/YamlSpec.coffee
 backend/node_modules/yamljs/test/spec/YamlSpec.js
 backend/node_modules/.package-lock.json
 backend/node_modules/.package-lock.json
+backend/data/store.json
