@@ -11,12 +11,14 @@ async function loadCart() {
     if (!container) return;
 
     if (!authToken) {
+        const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        const loginHref = `/pages/login.html?redirect=${encodeURIComponent(returnTo)}`;
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-sign-in-alt"></i>
                 <h3>Войдите в аккаунт</h3>
                 <p>Чтобы просмотреть корзину, необходимо авторизоваться</p>
-                <a href="/pages/login.html" class="btn btn-primary">Войти</a>
+                <a href="${loginHref}" class="btn btn-primary">Войти</a>
             </div>
         `;
         return;

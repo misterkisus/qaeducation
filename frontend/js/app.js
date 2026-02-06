@@ -47,7 +47,22 @@ function updateAuthUI(user) {
             <button onclick="logout()" class="btn btn-sm btn-danger">Выйти</button>
         </div>`;
     } else {
-        el.innerHTML = '<a href="/pages/login.html" class="btn btn-outline">Войти</a><a href="/pages/register.html" class="btn btn-primary">Регистрация</a>';
+        const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        const loginHref = `/pages/login.html?redirect=${encodeURIComponent(returnTo)}`;
+        el.innerHTML = `<a href="${loginHref}" class="btn btn-outline">Войти</a><a href="/pages/register.html" class="btn btn-primary">Регистрация</a>`;
+    }
+}
+
+function getSafeLoginRedirect() {
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    if (!redirect) return null;
+
+    try {
+        const targetUrl = new URL(redirect, window.location.origin);
+        if (targetUrl.origin !== window.location.origin) return null;
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+    } catch (e) {
+        return null;
     }
 }
 
@@ -64,7 +79,8 @@ async function login(email, password) {
             localStorage.setItem('authToken', authToken); 
             currentUser = data.user;
             showToast('Вход выполнен!', 'success');
-            window.location.href = data.user.role === 'admin' ? '/pages/admin/dashboard.html' : '/';
+            const redirectUrl = getSafeLoginRedirect();
+            window.location.href = redirectUrl || (data.user.role === 'admin' ? '/pages/admin/dashboard.html' : '/');
         } else {
             showToast(data.error || 'Ошибка входа', 'error');
         }
