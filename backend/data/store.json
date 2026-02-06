@@ -165,6 +165,12 @@
       "user_id": 1,
       "product_id": 1,
       "quantity": 1
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "product_id": 2,
+      "quantity": 1
     }
   ],
   "orders": [],
@@ -245,7 +251,7 @@
   ],
   "nextUserId": 4,
   "nextProductId": 13,
-  "nextCartId": 2,
+  "nextCartId": 3,
   "nextOrderId": 1,
   "nextPromocodeId": 7
 }
