@@ -52,11 +52,24 @@ function updateAuthUI(user) {
 }
 
 async function login(email, password) {
+    const normalizedEmail = (email || '').trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(normalizedEmail)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+    }
+
+    if (!password) {
+        showToast('Password is required', 'error');
+        return;
+    }
+
     try {
         const res = await fetch(`${API_URL}/auth/login`, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ email, password }) 
+            body: JSON.stringify({ email: normalizedEmail, password }) 
         });
         const data = await res.json();
         if (res.ok) {
