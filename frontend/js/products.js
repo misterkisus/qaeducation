@@ -60,6 +60,13 @@ async function loadProducts(params = {}) {
 function createProductCard(p) {
     const stockClass = p.stock === 0 ? 'out' : p.stock < 10 ? 'low' : '';
     const stockText = p.stock === 0 ? 'Нет в наличии' : p.stock < 10 ? `Осталось: ${p.stock}` : 'В наличии';
+    const actionButton = p.stock === 0
+        ? `<button class="btn btn-out-of-stock btn-sm" disabled>
+                    <i class="fas fa-ban"></i> Нет в наличии
+                </button>`
+        : `<button class="btn btn-primary btn-sm" onclick="addToCart(${p.id})">
+                    <i class="fas fa-cart-plus"></i> В корзину
+                </button>`;
     
     return `<div class="product-card">
         <img src="${p.image}" alt="${p.name}" class="product-image" 
@@ -73,9 +80,7 @@ function createProductCard(p) {
             <div class="product-stock ${stockClass}">${stockText}</div>
             <div class="product-actions">
                 <a href="/pages/product.html?id=${p.id}" class="btn btn-outline btn-sm">Подробнее</a>
-                <button class="btn btn-primary btn-sm" onclick="addToCart(${p.id})" ${p.stock === 0 ? 'disabled' : ''}>
-                    <i class="fas fa-cart-plus"></i> В корзину
-                </button>
+                ${actionButton}
             </div>
         </div>
     </div>`;
