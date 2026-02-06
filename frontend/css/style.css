@@ -20,6 +20,20 @@
     --radius: 8px;
 }
 
+:root[data-theme="dark"] {
+    --primary-color: #5da9ff;
+    --primary-dark: #3f8ce1;
+    --secondary-color: #38d39f;
+    --danger-color: #ff6b6b;
+    --warning-color: #f8b84e;
+    --text-color: #e8eef7;
+    --text-light: #a8b3c2;
+    --bg-color: #0f1620;
+    --white: #1b2533;
+    --border-color: #32445e;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
@@ -91,7 +105,38 @@ body {
 
 .auth-section {
     display: flex;
+    align-items: center;
     gap: 10px;
+}
+
+.theme-toggle-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--text-color);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 2100;
+}
+
+.theme-toggle-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+.theme-toggle-btn i {
+    font-size: 1.2rem;
 }
 
 .user-menu {
@@ -211,6 +256,8 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: 1rem;
+    background: var(--white);
+    color: var(--text-color);
 }
 
 .filter-group {
@@ -223,7 +270,8 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: 1rem;
-    background: white;
+    background: var(--white);
+    color: var(--text-color);
     cursor: pointer;
 }
 
@@ -396,6 +444,13 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: 1rem;
+    background: var(--white);
+    color: var(--text-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-light);
 }
 
 .form-group textarea {
@@ -483,7 +538,8 @@ body {
     width: 30px;
     height: 30px;
     border: 1px solid var(--border-color);
-    background: white;
+    background: var(--white);
+    color: var(--text-color);
     border-radius: 50%;
     cursor: pointer;
     display: flex;
@@ -497,6 +553,8 @@ body {
     padding: 5px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
+    background: var(--white);
+    color: var(--text-color);
 }
 
 .cart-item-remove {
@@ -802,6 +860,13 @@ body {
     .header .container {
         flex-wrap: wrap;
         gap: 15px;
+    }
+
+    .theme-toggle-btn {
+        right: 14px;
+        bottom: 14px;
+        width: 48px;
+        height: 48px;
     }
 
     .cart-container,

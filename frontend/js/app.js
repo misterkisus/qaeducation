@@ -7,12 +7,86 @@ const API_URL = window.location.origin + '/api';
 
 let currentUser = null;
 let authToken = localStorage.getItem('authToken');
+const THEME_STORAGE_KEY = 'techshop-theme';
+const THEMES = {
+    LIGHT: 'light',
+    DARK: 'dark'
+};
+
+initializeTheme();
 
 // ============ INITIALIZATION ============
-document.addEventListener('DOMContentLoaded', () => { 
+document.addEventListener('DOMContentLoaded', () => {
+    ensureThemeToggle();
+    updateThemeToggleButton();
     checkAuth(); 
     updateCartCount(); 
 });
+
+// ============ THEME ============
+function initializeTheme() {
+    applyTheme(getSavedTheme());
+}
+
+function getSavedTheme() {
+    try {
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        return savedTheme === THEMES.DARK ? THEMES.DARK : THEMES.LIGHT;
+    } catch (e) {
+        return THEMES.LIGHT;
+    }
+}
+
+function saveTheme(theme) {
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch (e) {
+        console.warn('Failed to save theme:', e);
+    }
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+}
+
+function isDarkThemeEnabled() {
+    return document.documentElement.getAttribute('data-theme') === THEMES.DARK;
+}
+
+function ensureThemeToggle() {
+    if (document.getElementById('theme-toggle-btn')) {
+        return;
+    }
+
+    const toggleButton = document.createElement('button');
+    toggleButton.type = 'button';
+    toggleButton.id = 'theme-toggle-btn';
+    toggleButton.className = 'theme-toggle-btn';
+    toggleButton.addEventListener('click', toggleTheme);
+    document.body.appendChild(toggleButton);
+}
+
+function updateThemeToggleButton() {
+    const toggleButton = document.getElementById('theme-toggle-btn');
+    if (!toggleButton) return;
+
+    if (isDarkThemeEnabled()) {
+        toggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+        toggleButton.setAttribute('aria-label', 'Switch to light theme');
+        toggleButton.title = 'Switch to light theme';
+    } else {
+        toggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+        toggleButton.setAttribute('aria-label', 'Switch to dark theme');
+        toggleButton.title = 'Switch to dark theme';
+    }
+}
+
+function toggleTheme() {
+    const nextTheme = isDarkThemeEnabled() ? THEMES.LIGHT : THEMES.DARK;
+    applyTheme(nextTheme);
+    saveTheme(nextTheme);
+    updateThemeToggleButton();
+}
 
 // ============ AUTH FUNCTIONS ============
 async function checkAuth() {
@@ -49,6 +123,7 @@ function updateAuthUI(user) {
     } else {
         el.innerHTML = '<a href="/pages/login.html" class="btn btn-outline">Войти</a><a href="/pages/register.html" class="btn btn-primary">Регистрация</a>';
     }
+    updateThemeToggleButton();
 }
 
 async function login(email, password) {
@@ -178,3 +253,5 @@ async function apiRequest(endpoint, options = {}) {
 
 // Для отладки - показать текущий API URL в консоли
 console.log('API URL:', API_URL);
+
+
