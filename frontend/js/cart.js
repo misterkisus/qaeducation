@@ -12,6 +12,11 @@ async function loadCart() {
 
     if (!authToken) {
         const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        try {
+            sessionStorage.setItem('post_login_redirect', returnTo);
+        } catch (e) {
+            // ignore storage errors
+        }
         const encodedReturnTo = encodeURIComponent(returnTo);
         const loginHref = `/pages/login.html?redirect=${encodedReturnTo}#redirect=${encodedReturnTo}`;
         container.innerHTML = `

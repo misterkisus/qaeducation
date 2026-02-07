@@ -7,6 +7,7 @@ const API_URL = window.location.origin + '/api';
 
 let currentUser = null;
 let authToken = localStorage.getItem('authToken');
+const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => { 
@@ -48,6 +49,11 @@ function updateAuthUI(user) {
         </div>`;
     } else {
         const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        try {
+            sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, returnTo);
+        } catch (e) {
+            // ignore storage errors
+        }
         const encodedReturnTo = encodeURIComponent(returnTo);
         const loginHref = `/pages/login.html?redirect=${encodedReturnTo}#redirect=${encodedReturnTo}`;
         el.innerHTML = `<a href="${loginHref}" class="btn btn-outline">Войти</a><a href="/pages/register.html" class="btn btn-primary">Регистрация</a>`;
@@ -68,10 +74,19 @@ function normalizeSafeRedirect(redirect) {
 function getSafeLoginRedirect() {
     const queryRedirect = new URLSearchParams(window.location.search).get('redirect');
     const hashRedirect = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('redirect');
+    let storedRedirect = null;
+    try {
+        storedRedirect = normalizeSafeRedirect(sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY));
+    } catch (e) {
+        storedRedirect = null;
+    }
     const referrerRedirect = normalizeSafeRedirect(document.referrer);
 
     if (queryRedirect) return normalizeSafeRedirect(queryRedirect);
     if (hashRedirect) return normalizeSafeRedirect(hashRedirect);
+    if (storedRedirect && !storedRedirect.startsWith('/pages/login.html') && !storedRedirect.startsWith('/pages/register.html')) {
+        return storedRedirect;
+    }
     if (referrerRedirect && !referrerRedirect.startsWith('/pages/login.html') && !referrerRedirect.startsWith('/pages/register.html')) {
         return referrerRedirect;
     }
@@ -93,6 +108,11 @@ async function login(email, password) {
             currentUser = data.user;
             showToast('Вход выполнен!', 'success');
             const redirectUrl = getSafeLoginRedirect();
+            try {
+                sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+            } catch (e) {
+                // ignore storage errors
+            }
             window.location.href = redirectUrl || (data.user.role === 'admin' ? '/pages/admin/dashboard.html' : '/');
         } else {
             showToast(data.error || 'Ошибка входа', 'error');
