@@ -63,6 +63,7 @@ async function loadCart() {
                 </a>
             </div>
         `;
+        bindCartItemNavigation(container);
 
     } catch (error) {
         console.error('Failed to load cart:', error);
@@ -73,7 +74,7 @@ async function loadCart() {
 // Create Cart Item HTML
 function createCartItem(item) {
     return `
-        <div class="cart-item" data-id="${item.id}">
+        <div class="cart-item cart-item-clickable" data-id="${item.id}" data-product-id="${item.product_id}" role="link" tabindex="0">
             <img src="${getProductImageUrl(item.image)}" alt="${item.name}" class="cart-item-image"
                  onerror="handleProductImageError(this)">
             <div class="cart-item-details">
@@ -95,6 +96,37 @@ function createCartItem(item) {
             </div>
         </div>
     `;
+}
+
+function bindCartItemNavigation(container) {
+    const interactiveSelector = '.quantity-btn, .quantity-input, .cart-item-remove';
+    const itemElements = container.querySelectorAll('.cart-item-clickable');
+
+    itemElements.forEach((itemElement) => {
+        const openProductPage = () => {
+            const productId = itemElement.dataset.productId;
+            if (!productId) return;
+            window.location.href = `/pages/product.html?id=${encodeURIComponent(productId)}`;
+        };
+
+        itemElement.addEventListener('click', (event) => {
+            if (event.target.closest(interactiveSelector)) {
+                return;
+            }
+            openProductPage();
+        });
+
+        itemElement.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+            if (event.target.closest(interactiveSelector)) {
+                return;
+            }
+            event.preventDefault();
+            openProductPage();
+        });
+    });
 }
 
 // Update Quantity
