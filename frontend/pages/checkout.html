@@ -45,6 +45,7 @@
                             <label for="address">Полный адрес *</label>
                             <textarea id="address" name="address" required 
                                 placeholder="Город, улица, дом, квартира, индекс" 
+                                maxlength="500"
                                 rows="3"></textarea>
                             <div class="error-message" id="address-error"></div>
                         </div>
@@ -201,11 +202,15 @@
 
         function validateForm() {
             let isValid = true;
+            const MAX_ADDRESS_LENGTH = 500;
 
             // Адрес
             const address = document.getElementById('address').value.trim();
             if (address.length < 10) {
                 showError('address', 'Введите полный адрес (минимум 10 символов)');
+                isValid = false;
+            } else if (address.length > MAX_ADDRESS_LENGTH) {
+                showError('address', `Адрес не должен превышать ${MAX_ADDRESS_LENGTH} символов`);
                 isValid = false;
             }
 
@@ -311,7 +316,13 @@
                     })
                 });
 
-                const data = await res.json();
+                const rawData = await res.text();
+                let data = {};
+                try {
+                    data = rawData ? JSON.parse(rawData) : {};
+                } catch (parseError) {
+                    data = {};
+                }
 
                 if (res.ok) {
                     showToast('🎉 Заказ успешно оформлен!', 'success');

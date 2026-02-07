@@ -663,13 +663,23 @@ app.delete('/api/reviews/:id', auth, (req, res) => {
 
 // ============ ORDERS ROUTES ============
 app.post('/api/orders/checkout', auth, (req, res) => {
-    const { shippingAddress, cardNumber, cardExpiry, cardCvc } = req.body;
+    const { shippingAddress, cardNumber, cardExpiry, cardCvc, promocode } = req.body;
+    const MAX_SHIPPING_ADDRESS_LENGTH = 500;
+    const normalizedAddress = typeof shippingAddress === 'string' ? shippingAddress.trim() : '';
+    const normalizedCardNumber = typeof cardNumber === 'string' ? cardNumber : String(cardNumber ?? '');
+    const normalizedCardExpiry = typeof cardExpiry === 'string' ? cardExpiry.trim() : '';
+    const normalizedCardCvc = typeof cardCvc === 'string' ? cardCvc.trim() : String(cardCvc ?? '').trim();
+    const normalizedPromocode = typeof promocode === 'string' ? promocode.trim() : '';
     
-    if (!shippingAddress || shippingAddress.trim().length < 10) {
+    if (normalizedAddress.length < 10) {
         return res.status(400).json({ error: 'Введите полный адрес доставки (минимум 10 символов)' });
     }
     
-    const cleanCard = (cardNumber || '').replace(/\s/g, '');
+    if (normalizedAddress.length > MAX_SHIPPING_ADDRESS_LENGTH) {
+        return res.status(400).json({ error: 'Адрес не должен превышать 500 символов' });
+    }
+    
+    const cleanCard = normalizedCardNumber.replace(/\s/g, '');
     const testCards = ['4242424242424242', '5555555555554444', '4000000000000002'];
     
     if (!/^\d{16}$/.test(cleanCard)) {
@@ -678,11 +688,11 @@ app.post('/api/orders/checkout', auth, (req, res) => {
     if (!testCards.includes(cleanCard)) {
         return res.status(400).json({ error: 'Используйте тестовую карту: 4242 4242 4242 4242' });
     }
-    if (!cardExpiry || !/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+    if (!normalizedCardExpiry || !/^\d{2}\/\d{2}$/.test(normalizedCardExpiry)) {
         return res.status(400).json({ error: 'Введите срок действия в формате MM/YY' });
     }
     
-    const [month, year] = cardExpiry.split('/').map(Number);
+    const [month, year] = normalizedCardExpiry.split('/').map(Number);
     if (month < 1 || month > 12) {
         return res.status(400).json({ error: 'Некорректный месяц' });
     }
@@ -691,7 +701,7 @@ app.post('/api/orders/checkout', auth, (req, res) => {
         return res.status(400).json({ error: 'Срок действия карты истёк' });
     }
     
-    if (!cardCvc || !/^\d{3}$/.test(cardCvc)) {
+    if (!normalizedCardCvc || !/^\d{3}$/.test(normalizedCardCvc)) {
         return res.status(400).json({ error: 'CVC должен содержать 3 цифры' });
     }
     
@@ -715,12 +725,31 @@ app.post('/api/orders/checkout', auth, (req, res) => {
         return sum + p.price * c.quantity;
     }, 0);
     
+    let discountAmount = 0;
+    let appliedPromo = null;
+    
+    if (normalizedPromocode) {
+        const promo = DATA.promocodes.find(p => p.code === normalizedPromocode && p.active);
+        if (promo && total >= promo.min_order) {
+            if (promo.type === 'percent') {
+                discountAmount = total * (promo.discount / 100);
+            } else {
+                discountAmount = Math.min(promo.discount, total);
+            }
+            total = Math.max(0, total - discountAmount);
+            promo.used_count++;
+            appliedPromo = promo.code;
+        }
+    }
+
     const order = {
         id: DATA.nextOrderId++,
         user_id: req.user.id,
         total: Math.round(total * 100) / 100,
+        discount: Math.round(discountAmount * 100) / 100,
+        promocode: appliedPromo,
         status: 'pending',
-        shipping_address: shippingAddress.trim(),
+        shipping_address: normalizedAddress,
         payment_method: 'card',
         card_last4: cleanCard.slice(-4),
         created_at: new Date().toISOString()
@@ -745,7 +774,9 @@ app.post('/api/orders/checkout', auth, (req, res) => {
     res.json({ 
         message: 'Заказ успешно оформлен', 
         orderId: order.id, 
-        total: order.total
+        total: order.total,
+        discount: order.discount,
+        promocode: order.promocode
     });
 });
 
@@ -1115,6 +1146,18 @@ app.get('*', (req, res) => {
 
 // ============ ERROR HANDLER ============
 app.use((err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    if (err?.type === 'entity.too.large') {
+        return res.status(413).json({ error: 'Request payload is too large' });
+    }
+
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+
     console.error('Error:', err);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 });
@@ -1154,4 +1197,3 @@ function startServer(initialPort) {
 }
 
 startServer(PORT);
-
