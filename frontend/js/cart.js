@@ -80,12 +80,12 @@ function createCartItem(item) {
                 <div class="cart-item-name">${item.name}</div>
                 <div class="cart-item-price">${formatPrice(item.price)}</div>
                 <div class="cart-item-quantity">
-                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">
+                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.quantity - 1}, ${item.stock})">
                         <i class="fas fa-minus"></i>
                     </button>
-                    <input type="number" class="quantity-input" value="${item.quantity}" min="1" max="999"
-                           onchange="updateQuantity(${item.id}, this.value)">
-                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">
+                    <input type="number" class="quantity-input" value="${item.quantity}" min="1" max="${Math.max(1, item.stock)}"
+                           onchange="updateQuantity(${item.id}, this.value, ${item.stock}, this)">
+                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.quantity + 1}, ${item.stock})">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
@@ -98,21 +98,51 @@ function createCartItem(item) {
 }
 
 // Update Quantity
-async function updateQuantity(cartItemId, quantity) {
+function normalizeQuantity(quantity, maxStock) {
+    const rawValue = String(quantity).trim();
+    if (!rawValue) return null;
+
+    const parsed = Math.trunc(Number(rawValue));
+    if (!Number.isFinite(parsed)) return null;
+    if (parsed <= 0) return 0;
+    if (Number.isFinite(maxStock) && maxStock > 0) {
+        return Math.min(parsed, maxStock);
+    }
+    return parsed;
+}
+
+async function updateQuantity(cartItemId, quantity, maxStock = null, inputElement = null) {
+    const normalizedQuantity = normalizeQuantity(quantity, maxStock);
+    if (normalizedQuantity === null) {
+        showToast('Enter a valid quantity', 'error');
+        loadCart();
+        return;
+    }
+
+    if (inputElement && normalizedQuantity > 0) {
+        inputElement.value = normalizedQuantity;
+    }
+
     try {
         const response = await apiRequest(`/cart/${cartItemId}`, {
             method: 'PUT',
-            body: JSON.stringify({ quantity: parseInt(quantity) })
+            body: JSON.stringify({ quantity: normalizedQuantity })
         });
 
         if (response.ok) {
             loadCart();
             updateCartCount();
         } else {
-            showToast('Ошибка обновления количества', 'error');
+            let message = 'Failed to update quantity';
+            try {
+                const data = await response.json();
+                if (data?.error) message = data.error;
+            } catch (e) {}
+            showToast(message, 'error');
+            loadCart();
         }
     } catch (error) {
-        showToast('Ошибка соединения', 'error');
+        showToast('Connection error', 'error');
     }
 }
 

@@ -284,6 +284,24 @@ function disableConditionalGet(req, res) {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
 }
 
+function parseCartQuantity(value, { allowZero = false } = {}) {
+    let parsed = NaN;
+
+    if (typeof value === 'number') {
+        parsed = value;
+    } else if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!/^\d+$/.test(trimmed)) return null;
+        parsed = Number(trimmed);
+    } else {
+        return null;
+    }
+
+    if (!Number.isSafeInteger(parsed)) return null;
+    if (allowZero ? parsed < 0 : parsed <= 0) return null;
+    return parsed;
+}
+
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
@@ -391,21 +409,36 @@ app.get('/api/cart', auth, (req, res) => {
 });
 
 app.post('/api/cart/add', auth, (req, res) => {
-    const { productId, quantity = 1 } = req.body;
-    const product = DATA.products.find(p => p.id === productId && p.active);
+    const { productId, quantity = 1 } = req.body || {};
+    const normalizedProductId = Number(productId);
+    if (!Number.isSafeInteger(normalizedProductId) || normalizedProductId <= 0) {
+        return res.status(400).json({ error: 'Некорректный productId' });
+    }
+
+    const normalizedQuantity = parseCartQuantity(quantity);
+    if (normalizedQuantity === null) {
+        return res.status(400).json({ error: 'Количество должно быть положительным целым числом' });
+    }
+
+    const product = DATA.products.find(p => p.id === normalizedProductId && p.active);
     if (!product) return res.status(404).json({ error: 'Товар не найден' });
     
-    const existingItem = DATA.cart.find(c => c.user_id === req.user.id && c.product_id === productId);
+    const existingItem = DATA.cart.find(c => c.user_id === req.user.id && c.product_id === normalizedProductId);
     const currentInCart = existingItem ? existingItem.quantity : 0;
     
-    if (currentInCart + quantity > product.stock) {
+    if (currentInCart + normalizedQuantity > product.stock) {
         return res.status(400).json({ error: `Недостаточно товара. Доступно: ${product.stock}, в корзине: ${currentInCart}` });
     }
     
     if (existingItem) {
-        existingItem.quantity += quantity;
+        existingItem.quantity += normalizedQuantity;
     } else {
-        DATA.cart.push({ id: DATA.nextCartId++, user_id: req.user.id, product_id: productId, quantity });
+        DATA.cart.push({
+            id: DATA.nextCartId++,
+            user_id: req.user.id,
+            product_id: normalizedProductId,
+            quantity: normalizedQuantity
+        });
     }
     if (!persistOr500(res)) return;
     res.json({ message: 'Товар добавлен в корзину' });
@@ -415,14 +448,20 @@ app.put('/api/cart/:id', auth, (req, res) => {
     const item = DATA.cart.find(c => c.id === parseInt(req.params.id) && c.user_id === req.user.id);
     if (!item) return res.status(404).json({ error: 'Товар не найден в корзине' });
     
-    const newQuantity = parseInt(req.body.quantity);
-    if (newQuantity <= 0) {
+    const newQuantity = parseCartQuantity(req.body?.quantity, { allowZero: true });
+    if (newQuantity === null) {
+        return res.status(400).json({ error: 'Quantity must be an integer >= 0' });
+    }
+    if (newQuantity === 0) {
         DATA.cart = DATA.cart.filter(c => c.id !== item.id);
         if (!persistOr500(res)) return;
         return res.json({ message: 'Товар удалён из корзины' });
     }
     
     const product = DATA.products.find(p => p.id === item.product_id);
+    if (!product || !product.active) {
+        return res.status(404).json({ error: 'Product not found' });
+    }
     if (newQuantity > product.stock) {
         return res.status(400).json({ error: `Недостаточно товара. Доступно: ${product.stock}` });
     }
