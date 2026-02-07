@@ -496,13 +496,21 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // ============ CART ROUTES ============
+function toIntegerOrNull(value) {
+    const quantity = Number(value);
+    if (!Number.isInteger(quantity)) return null;
+    return quantity;
+}
+
 app.get('/api/cart', auth, (req, res) => {
     const items = DATA.cart
         .filter(c => c.user_id === req.user.id)
         .map(c => {
             const p = DATA.products.find(pr => pr.id === c.product_id);
             if (!p) return null;
-            return { id: c.id, quantity: c.quantity, product_id: p.id, name: p.name, price: p.price, image: p.image, stock: p.stock };
+            const quantity = toIntegerOrNull(c.quantity);
+            if (quantity === null || quantity <= 0) return null;
+            return { id: c.id, quantity, product_id: p.id, name: p.name, price: p.price, image: p.image, stock: p.stock };
         })
         .filter(Boolean);
     
@@ -517,7 +525,12 @@ app.get('/api/cart', auth, (req, res) => {
 });
 
 app.post('/api/cart/add', auth, (req, res) => {
-    const { productId, quantity = 1 } = req.body;
+    const productId = toIntegerOrNull(req.body.productId);
+    const quantity = toIntegerOrNull(req.body.quantity ?? 1);
+    if (productId === null || quantity === null || quantity <= 0) {
+        return res.status(400).json({ error: 'Некорректное количество' });
+    }
+
     const product = DATA.products.find(p => p.id === productId && p.active);
     if (!product) return res.status(404).json({ error: 'Товар не найден' });
     
@@ -541,8 +554,12 @@ app.put('/api/cart/:id', auth, (req, res) => {
     const item = DATA.cart.find(c => c.id === parseInt(req.params.id) && c.user_id === req.user.id);
     if (!item) return res.status(404).json({ error: 'Товар не найден в корзине' });
     
-    const newQuantity = parseInt(req.body.quantity);
-    if (newQuantity <= 0) {
+    const newQuantity = toIntegerOrNull(req.body.quantity);
+    if (newQuantity === null || newQuantity < 0) {
+        return res.status(400).json({ error: 'Некорректное количество' });
+    }
+
+    if (newQuantity === 0) {
         DATA.cart = DATA.cart.filter(c => c.id !== item.id);
         if (!persistOr500(res)) return;
         return res.json({ message: 'Товар удалён из корзины' });

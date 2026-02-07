@@ -85,7 +85,7 @@ function createCartItem(item) {
                         <i class="fas fa-minus"></i>
                     </button>
                     <input type="number" class="quantity-input" value="${item.quantity}" min="1" max="999"
-                           onchange="updateQuantity(${item.id}, this.value)">
+                           inputmode="numeric" onchange="updateQuantity(${item.id}, this.value, ${item.quantity})">
                     <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">
                         <i class="fas fa-plus"></i>
                     </button>
@@ -129,12 +129,40 @@ function bindCartItemNavigation(container) {
     });
 }
 
+function parseQuantityValue(rawValue) {
+    const normalized = String(rawValue ?? '').trim();
+    if (!normalized) return null;
+    if (!/^-?\d+$/.test(normalized)) return null;
+
+    const quantity = Number.parseInt(normalized, 10);
+    if (!Number.isInteger(quantity)) return null;
+
+    return quantity;
+}
+
 // Update Quantity
-async function updateQuantity(cartItemId, quantity) {
+async function updateQuantity(cartItemId, rawQuantity, previousQuantity = null) {
+    const parsedQuantity = parseQuantityValue(rawQuantity);
+
+    if (parsedQuantity === null) {
+        showToast('Введите корректное целое число', 'warning');
+        loadCart();
+        return;
+    }
+
+    const quantity = Math.min(parsedQuantity, 999);
+    if (quantity < 0) {
+        showToast('Количество не может быть отрицательным', 'warning');
+        loadCart();
+        return;
+    }
+
+    if (quantity === previousQuantity) return;
+
     try {
         const response = await apiRequest(`/cart/${cartItemId}`, {
             method: 'PUT',
-            body: JSON.stringify({ quantity: parseInt(quantity) })
+            body: JSON.stringify({ quantity })
         });
 
         if (response.ok) {
