@@ -27,6 +27,12 @@ body {
     line-height: 1.6;
 }
 
+/* Keep page width stable when content height toggles scrollbar visibility */
+html {
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
