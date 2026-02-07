@@ -20,8 +20,8 @@ async function loadAdminProducts() {
             <tr>
                 <td>${product.id}</td>
                 <td>
-                    <img src="${product.image}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
-                         onerror="this.src='https://via.placeholder.com/50'">
+                    <img src="${getProductImageUrl(product.image)}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
+                         onerror="handleProductImageError(this)">
                 </td>
                 <td>${product.name}</td>
                 <td>${formatPrice(product.price)}</td>

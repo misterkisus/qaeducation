@@ -5,6 +5,28 @@ const API_URL = window.location.origin + '/api';
 // Или просто используй относительный путь (тоже работает):
 // const API_URL = '/api';
 
+const PRODUCT_PLACEHOLDER_IMAGE = '/img/product-placeholder.svg';
+
+function getProductImageUrl(imageUrl) {
+    if (typeof imageUrl !== 'string') {
+        return PRODUCT_PLACEHOLDER_IMAGE;
+    }
+
+    const normalizedUrl = imageUrl.trim();
+    const loweredUrl = normalizedUrl.toLowerCase();
+    if (!normalizedUrl || loweredUrl === 'null' || loweredUrl === 'undefined') {
+        return PRODUCT_PLACEHOLDER_IMAGE;
+    }
+
+    return normalizedUrl;
+}
+
+function handleProductImageError(imgElement) {
+    if (!imgElement) return;
+    imgElement.onerror = null;
+    imgElement.src = PRODUCT_PLACEHOLDER_IMAGE;
+}
+
 let currentUser = null;
 let authToken = localStorage.getItem('authToken');
 

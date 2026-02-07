@@ -350,8 +350,8 @@
                 
                 container.innerHTML = `
                     <div>
-                        <img src="${currentProduct.image}" alt="${currentProduct.name}" class="product-page-image" 
-                             onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+                        <img src="${getProductImageUrl(currentProduct.image)}" alt="${currentProduct.name}" class="product-page-image"
+                             onerror="handleProductImageError(this)">
                     </div>
                     <div>
                         <h1 class="product-page-title">${currentProduct.name}</h1>
