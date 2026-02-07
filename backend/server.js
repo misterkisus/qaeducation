@@ -273,6 +273,17 @@ const adminOnly = (req, res, next) => {
     next();
 };
 
+function toPublicProduct(product) {
+    const { id, name, description, price, stock, category, image, active } = product;
+    return { id, name, description, price, stock, category, image, active };
+}
+
+function disableConditionalGet(req, res) {
+    delete req.headers['if-none-match'];
+    delete req.headers['if-modified-since'];
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+}
+
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
@@ -326,6 +337,7 @@ app.post('/api/auth/expire', (req, res) => {
 
 // ============ PRODUCTS ROUTES ============
 app.get('/api/products', (req, res) => {
+    disableConditionalGet(req, res);
     let products = DATA.products.filter(p => p.active === 1);
     
     if (req.query.category) {
@@ -343,7 +355,7 @@ app.get('/api/products', (req, res) => {
     else if (req.query.sort === 'price_desc') products.sort((a, b) => b.price - a.price);
     else if (req.query.sort === 'name') products.sort((a, b) => a.name.localeCompare(b.name));
     
-    res.json(products);
+    res.json(products.map(toPublicProduct));
 });
 
 app.get('/api/products/meta/categories', (req, res) => {
@@ -352,9 +364,10 @@ app.get('/api/products/meta/categories', (req, res) => {
 });
 
 app.get('/api/products/:id', (req, res) => {
+    disableConditionalGet(req, res);
     const product = DATA.products.find(p => p.id === parseInt(req.params.id) && p.active);
     if (!product) return res.status(404).json({ error: 'Товар не найден' });
-    res.json(product);
+    res.json(toPublicProduct(product));
 });
 
 // ============ CART ROUTES ============
