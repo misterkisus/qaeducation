@@ -42,8 +42,9 @@ const checkSiteAccess = (req, res, next) => {
     const accessToken = cookies[ACCESS_COOKIE_NAME];
     
     if (!accessToken || !verifyAccessToken(accessToken)) {
-        // Нет доступа - показываем страницу ввода кода
-        return res.sendFile(path.join(__dirname, '../frontend/access.html'));
+        // Нет доступа - отправляем на страницу ввода кода с сохранением исходного URL
+        const nextUrl = encodeURIComponent(req.originalUrl || '/');
+        return res.redirect(`/access.html?next=${nextUrl}`);
     }
     
     next();

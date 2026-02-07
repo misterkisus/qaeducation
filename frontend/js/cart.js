@@ -12,7 +12,8 @@ async function loadCart() {
 
     if (!authToken) {
         const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-        const loginHref = `/pages/login.html?redirect=${encodeURIComponent(returnTo)}`;
+        const encodedReturnTo = encodeURIComponent(returnTo);
+        const loginHref = `/pages/login.html?redirect=${encodedReturnTo}#redirect=${encodedReturnTo}`;
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-sign-in-alt"></i>

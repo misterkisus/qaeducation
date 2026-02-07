@@ -212,6 +212,20 @@
         const submitBtn = document.getElementById('submit-btn');
         const errorMessage = document.getElementById('error-message');
         const errorText = document.getElementById('error-text');
+        const NEXT_URL = getSafeNextUrl();
+
+        function getSafeNextUrl() {
+            const rawNext = new URLSearchParams(window.location.search).get('next');
+            if (!rawNext) return '/';
+
+            try {
+                const url = new URL(rawNext, window.location.origin);
+                if (url.origin !== window.location.origin) return '/';
+                return `${url.pathname}${url.search}${url.hash}`;
+            } catch (e) {
+                return '/';
+            }
+        }
 
         // Автоматически убираем пробелы и делаем uppercase при вводе
         codeInput.addEventListener('input', function() {
@@ -248,9 +262,9 @@
                     submitBtn.innerHTML = '<i class="fas fa-check"></i> Доступ разрешён!';
                     submitBtn.style.background = '#27ae60';
                     
-                    // Редирект на главную
+                    // Редирект на страницу, которую пользователь запрашивал
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = NEXT_URL;
                     }, 500);
                 } else {
                     showError(data.error || 'Неверный код доступа');
@@ -278,7 +292,7 @@
                 const data = await response.json();
                 
                 if (data.hasAccess) {
-                    window.location.href = '/';
+                    window.location.href = NEXT_URL;
                 }
             } catch (e) {
                 // Игнорируем ошибки

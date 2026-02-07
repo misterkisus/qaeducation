@@ -48,22 +48,35 @@ function updateAuthUI(user) {
         </div>`;
     } else {
         const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-        const loginHref = `/pages/login.html?redirect=${encodeURIComponent(returnTo)}`;
+        const encodedReturnTo = encodeURIComponent(returnTo);
+        const loginHref = `/pages/login.html?redirect=${encodedReturnTo}#redirect=${encodedReturnTo}`;
         el.innerHTML = `<a href="${loginHref}" class="btn btn-outline">Войти</a><a href="/pages/register.html" class="btn btn-primary">Регистрация</a>`;
     }
 }
 
-function getSafeLoginRedirect() {
-    const redirect = new URLSearchParams(window.location.search).get('redirect');
+function normalizeSafeRedirect(redirect) {
     if (!redirect) return null;
-
     try {
-        const targetUrl = new URL(redirect, window.location.origin);
-        if (targetUrl.origin !== window.location.origin) return null;
+        const targetUrl = new URL(redirect, window.location.href);
+        if (targetUrl.host !== window.location.host) return null;
         return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
     } catch (e) {
         return null;
     }
+}
+
+function getSafeLoginRedirect() {
+    const queryRedirect = new URLSearchParams(window.location.search).get('redirect');
+    const hashRedirect = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('redirect');
+    const referrerRedirect = normalizeSafeRedirect(document.referrer);
+
+    if (queryRedirect) return normalizeSafeRedirect(queryRedirect);
+    if (hashRedirect) return normalizeSafeRedirect(hashRedirect);
+    if (referrerRedirect && !referrerRedirect.startsWith('/pages/login.html') && !referrerRedirect.startsWith('/pages/register.html')) {
+        return referrerRedirect;
+    }
+
+    return null;
 }
 
 async function login(email, password) {
