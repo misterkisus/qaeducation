@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блэкджек - TechShop</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .blackjack-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+        }
+
+        .blackjack-table {
+            background: linear-gradient(160deg, #155d3b 0%, #0f4f32 100%);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            color: #fff;
+            padding: 24px;
+        }
+
+        .blackjack-panel {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .blackjack-chips {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-weight: 700;
+        }
+
+        .blackjack-bet label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .blackjack-bet input {
+            width: 120px;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 1rem;
+        }
+
+        .blackjack-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .blackjack-actions .btn {
+            border: 2px solid transparent;
+        }
+
+        .blackjack-actions .btn-outline {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .blackjack-actions .btn-outline:hover {
+            background: #fff;
+            color: #0f4f32;
+        }
+
+        .blackjack-message {
+            min-height: 26px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .blackjack-topline {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 14px;
+        }
+
+        .deck-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            opacity: 0.95;
+        }
+
+        .blackjack-deck {
+            position: relative;
+            width: 60px;
+            height: 88px;
+            transition: transform 0.2s ease;
+        }
+
+        .blackjack-deck.is-animating {
+            transform: translateY(-2px);
+        }
+
+        .deck-card {
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.65);
+            background: repeating-linear-gradient(
+                45deg,
+                #1e3a8a,
+                #1e3a8a 8px,
+                #172554 8px,
+                #172554 16px
+            );
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        .deck-card.layer-2 {
+            transform: translate(4px, -4px);
+            opacity: 0.9;
+        }
+
+        .deck-card.layer-3 {
+            transform: translate(8px, -8px);
+            opacity: 0.8;
+        }
+
+        .blackjack-hands {
+            display: grid;
+            gap: 20px;
+        }
+
+        .blackjack-hand h3 {
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .playing-card {
+            width: 60px;
+            height: 88px;
+            border-radius: 8px;
+            background: #fff;
+            color: #1f1f1f;
+            border: 2px solid #ececec;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            font-weight: 700;
+        }
+
+        .playing-card.red {
+            color: #c0392b;
+        }
+
+        .playing-card .bottom {
+            align-self: end;
+            transform: rotate(180deg);
+        }
+
+        .playing-card.hidden {
+            background: repeating-linear-gradient(
+                45deg,
+                #1e3a8a,
+                #1e3a8a 8px,
+                #172554 8px,
+                #172554 16px
+            );
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .flying-card {
+            position: fixed;
+            width: 60px;
+            height: 88px;
+            z-index: 3000;
+            pointer-events: none;
+            transform: translate(0, 0);
+            transition: transform 460ms cubic-bezier(0.22, 0.61, 0.36, 1);
+            perspective: 1000px;
+        }
+
+        .flying-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 260ms ease;
+        }
+
+        .flying-card.is-flipped .flying-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flying-card-face {
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .flying-card-back {
+            border: 2px solid rgba(255, 255, 255, 0.65);
+            background: repeating-linear-gradient(
+                45deg,
+                #1e3a8a,
+                #1e3a8a 8px,
+                #172554 8px,
+                #172554 16px
+            );
+        }
+
+        .flying-card-front {
+            background: #fff;
+            border: 2px solid #ececec;
+            color: #1f1f1f;
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            font-weight: 700;
+        }
+
+        .flying-card-front.red {
+            color: #c0392b;
+        }
+
+        .flying-card-front .bottom {
+            align-self: end;
+            transform: rotate(180deg);
+        }
+
+        .blackjack-sidebar {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .blackjack-sidebar h3 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .blackjack-sidebar p {
+            color: var(--text-light);
+            margin-bottom: 14px;
+        }
+
+        .blackjack-sidebar ul {
+            margin-left: 18px;
+            color: var(--text-light);
+        }
+
+        .blackjack-sidebar li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .blackjack-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .blackjack-bet input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo">
+                <i class="fas fa-shopping-bag"></i>
+                TechShop
+            </a>
+            <nav class="nav">
+                <a href="/" class="nav-link">Каталог</a>
+                <a href="/pages/cart.html" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    Корзина
+                    <span class="cart-count" id="cart-count">0</span>
+                </a>
+                <a href="/pages/blackjack.html" class="nav-link active">
+                    <i class="fas fa-dice"></i>
+                    Блэкджек
+                </a>
+            </nav>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <h1 style="margin-bottom: 20px;">Блэкджек на фишки</h1>
+
+            <div class="blackjack-layout">
+                <section class="blackjack-table">
+                    <div class="blackjack-panel">
+                        <div class="blackjack-chips">
+                            Фишки: <span id="chips-value">0</span>
+                        </div>
+
+                        <div class="blackjack-bet">
+                            <label for="bet-input">Ставка</label>
+                            <input id="bet-input" type="number" min="10" step="10" value="50">
+                        </div>
+
+                        <div class="blackjack-actions">
+                            <button id="deal-btn" class="btn btn-primary">
+                                <i class="fas fa-play"></i>
+                                Раздать
+                            </button>
+                            <button id="hit-btn" class="btn btn-outline" disabled>
+                                <i class="fas fa-plus"></i>
+                                Еще
+                            </button>
+                            <button id="stand-btn" class="btn btn-outline" disabled>
+                                <i class="fas fa-hand-paper"></i>
+                                Хватит
+                            </button>
+                            <button id="reset-chips-btn" class="btn btn-outline">
+                                <i class="fas fa-coins"></i>
+                                Сбросить фишки
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="blackjack-message" id="game-message">
+                        Сделайте ставку и нажмите «Раздать».
+                    </div>
+
+                    <div class="blackjack-topline">
+                        <div class="deck-wrap">
+                            <span>Колода</span>
+                            <div class="blackjack-deck" id="deck-pile" aria-hidden="true">
+                                <div class="deck-card layer-3"></div>
+                                <div class="deck-card layer-2"></div>
+                                <div class="deck-card"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="blackjack-hands">
+                        <div class="blackjack-hand">
+                            <h3>Дилер: <span id="dealer-score">0</span></h3>
+                            <div class="cards" id="dealer-cards"></div>
+                        </div>
+                        <div class="blackjack-hand">
+                            <h3>Игрок: <span id="player-score">0</span></h3>
+                            <div class="cards" id="player-cards"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="blackjack-sidebar">
+                    <h3>Как играть</h3>
+                    <p>Классические правила блэкджека на фишки. Баланс сохраняется в браузере.</p>
+                    <ul>
+                        <li>Стартовый баланс: 1000 фишек.</li>
+                        <li>Минимальная ставка: 10 фишек.</li>
+                        <li>Блэкджек выплачивается 3:2.</li>
+                        <li>Дилер добирает до 17.</li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/blackjack.js"></script>
+</body>
+</html>
