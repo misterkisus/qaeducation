@@ -133,17 +133,29 @@
         
         // Маска для номера карты: 0000 0000 0000 0000
         document.getElementById('card-number').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, ''); // Только цифры
+            const input = e.target;
+            const currentValue = input.value;
+            const caret = input.selectionStart ?? currentValue.length;
+
+            // Считаем, сколько цифр было слева от курсора до форматирования
+            const digitsBeforeCaret = currentValue.slice(0, caret).replace(/\D/g, '').length;
+
+            let value = currentValue.replace(/\D/g, ''); // Только цифры
             value = value.substring(0, 16); // Максимум 16 цифр
-            
+
             // Добавляем пробелы каждые 4 цифры
             let formatted = '';
             for (let i = 0; i < value.length; i++) {
                 if (i > 0 && i % 4 === 0) formatted += ' ';
                 formatted += value[i];
             }
-            
-            e.target.value = formatted;
+
+            input.value = formatted;
+
+            // Восстанавливаем позицию курсора после форматирования
+            const spacesBeforeCaret = digitsBeforeCaret > 0 ? Math.floor((digitsBeforeCaret - 1) / 4) : 0;
+            const nextCaret = Math.min(formatted.length, digitsBeforeCaret + spacesBeforeCaret);
+            input.setSelectionRange(nextCaret, nextCaret);
             
             // Подсвечиваем иконку типа карты
             document.getElementById('icon-visa').classList.toggle('active', value.startsWith('4'));
