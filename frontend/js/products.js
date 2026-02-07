@@ -156,7 +156,12 @@ function createProductCard(p) {
                     <i class="fas fa-cart-plus"></i> В корзину
                 </button>`;
 
-    return `<div class="product-card">
+    return `<div class="product-card product-card--clickable"
+        role="link"
+        tabindex="0"
+        aria-label="Open product ${p.name}"
+        onclick="openProductCard(event, ${p.id})"
+        onkeydown="handleProductCardKeydown(event, ${p.id})">
         <div style="position: relative;">
             <img src="${getProductImageUrl(p.image)}" alt="${p.name}" class="product-image" 
                  onerror="handleProductImageError(this)">
@@ -181,6 +186,27 @@ function createProductCard(p) {
             </div>
         </div>
     </div>`;
+}
+
+function openProductCard(event, productId) {
+    if (event.target.closest('.product-actions, .wishlist-btn, a, button')) {
+        return;
+    }
+
+    window.location.href = `/pages/product.html?id=${productId}`;
+}
+
+function handleProductCardKeydown(event, productId) {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+        return;
+    }
+
+    if (event.target.closest('.product-actions, .wishlist-btn, a, button')) {
+        return;
+    }
+
+    event.preventDefault();
+    window.location.href = `/pages/product.html?id=${productId}`;
 }
 
 async function loadCategories() {
