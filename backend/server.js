@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -24,7 +24,7 @@ function normalizeProductImage(image) {
     return normalizedImage;
 }
 
-// ===== СЕКРЕТНЫЙ КОД ДЛЯ ДОСТУПА К САЙТУ =====
+// ===== РЎР•РљР Р•РўРќР«Р™ РљРћР” Р”Р›РЇ Р”РћРЎРўРЈРџРђ Рљ РЎРђР™РўРЈ =====
 const SITE_ACCESS_CODE = 'PIZDA';
 const ACCESS_COOKIE_NAME = 'site_access';
 const ACCESS_COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -32,7 +32,7 @@ const ACCESS_COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
 app.use(cors());
 app.use(express.json());
 
-// ===== MIDDLEWARE: ПРОВЕРКА ДОСТУПА К САЙТУ =====
+// ===== MIDDLEWARE: РџР РћР’Р•Р РљРђ Р”РћРЎРўРЈРџРђ Рљ РЎРђР™РўРЈ =====
 const checkSiteAccess = (req, res, next) => {
     if (req.path.startsWith('/api/') || 
         req.path.startsWith('/css/') || 
@@ -80,21 +80,21 @@ function generateAccessToken() {
 app.use(checkSiteAccess);
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// ===== API: ПРОВЕРКА КОДА ДОСТУПА =====
+// ===== API: РџР РћР’Р•Р РљРђ РљРћР”Рђ Р”РћРЎРўРЈРџРђ =====
 app.post('/api/access/verify', (req, res) => {
     const { code } = req.body;
     
     if (!code) {
-        return res.status(400).json({ error: 'Введите код доступа' });
+        return res.status(400).json({ error: 'Р’РІРµРґРёС‚Рµ РєРѕРґ РґРѕСЃС‚СѓРїР°' });
     }
     
     if (code.toUpperCase() === SITE_ACCESS_CODE) {
         const token = generateAccessToken();
         res.setHeader('Set-Cookie', `${ACCESS_COOKIE_NAME}=${token}; Max-Age=${ACCESS_COOKIE_MAX_AGE / 1000}; Path=/; HttpOnly; SameSite=Strict`);
-        return res.json({ success: true, message: 'Доступ разрешён' });
+        return res.json({ success: true, message: 'Р”РѕСЃС‚СѓРї СЂР°Р·СЂРµС€С‘РЅ' });
     }
     
-    res.status(401).json({ error: 'Неверный код доступа' });
+    res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ РєРѕРґ РґРѕСЃС‚СѓРїР°' });
 });
 
 app.get('/api/access/check', (req, res) => {
@@ -147,14 +147,14 @@ function createDefaultData() {
             { id: 6, code: 'BUGGY150', discount: 150, type: 'percent', min_order: 0, max_uses: 10, used_count: 0, expires_at: '2025-12-31', active: 1, created_at: new Date().toISOString() }
         ],
         reviews: [
-            { id: 1, product_id: 1, user_id: 2, user_name: 'Test User', rating: 5, text: 'Отличные наушники! Звук супер, шумоподавление работает на ура. Рекомендую всем!', status: 'approved', created_at: '2024-01-10T10:30:00.000Z' },
-            { id: 2, product_id: 1, user_id: 2, user_name: 'Test User', rating: 4, text: 'Хорошее качество звука, удобные. Но немного дороговато на мой взгляд.', status: 'approved', created_at: '2024-01-12T14:20:00.000Z' },
-            { id: 3, product_id: 2, user_id: 2, user_name: 'Test User', rating: 5, text: 'Лучшие смарт-часы! Трекер сна очень точный, GPS работает отлично.', status: 'approved', created_at: '2024-01-15T09:00:00.000Z' },
-            { id: 4, product_id: 4, user_id: 2, user_name: 'Test User', rating: 3, text: 'Клавиатура норм, но клавиши слишком громкие для офиса. Для дома подойдёт.', status: 'pending', created_at: '2024-01-18T16:45:00.000Z' },
-            { id: 5, product_id: 7, user_id: 2, user_name: 'Test User', rating: 1, text: 'Ужасное качество! Подошва отклеилась через неделю использования!', status: 'pending', created_at: '2024-01-20T11:30:00.000Z' },
-            { id: 6, product_id: 1, user_id: 2, user_name: 'Hacker', rating: 5, text: `<img src=x onerror="alert('XSS')"> Отличный товар!`, status: 'pending', created_at: '2024-01-22T08:00:00.000Z' },
-            { id: 7, product_id: 5, user_id: 2, user_name: 'Test User', rating: 4, text: 'Хороший повербанк, заряжает быстро. Немного тяжеловат.', status: 'approved', created_at: '2024-01-25T12:00:00.000Z' },
-            { id: 8, product_id: 3, user_id: 2, user_name: 'Test User', rating: 5, text: 'Сумка премиум класса! Кожа настоящая, пахнет приятно. Ноутбук влезает идеально.', status: 'rejected', created_at: '2024-01-26T15:30:00.000Z' }
+            { id: 1, product_id: 1, user_id: 2, user_name: 'Test User', rating: 5, text: 'РћС‚Р»РёС‡РЅС‹Рµ РЅР°СѓС€РЅРёРєРё! Р—РІСѓРє СЃСѓРїРµСЂ, С€СѓРјРѕРїРѕРґР°РІР»РµРЅРёРµ СЂР°Р±РѕС‚Р°РµС‚ РЅР° СѓСЂР°. Р РµРєРѕРјРµРЅРґСѓСЋ РІСЃРµРј!', status: 'approved', created_at: '2024-01-10T10:30:00.000Z' },
+            { id: 2, product_id: 1, user_id: 2, user_name: 'Test User', rating: 4, text: 'РҐРѕСЂРѕС€РµРµ РєР°С‡РµСЃС‚РІРѕ Р·РІСѓРєР°, СѓРґРѕР±РЅС‹Рµ. РќРѕ РЅРµРјРЅРѕРіРѕ РґРѕСЂРѕРіРѕРІР°С‚Рѕ РЅР° РјРѕР№ РІР·РіР»СЏРґ.', status: 'approved', created_at: '2024-01-12T14:20:00.000Z' },
+            { id: 3, product_id: 2, user_id: 2, user_name: 'Test User', rating: 5, text: 'Р›СѓС‡С€РёРµ СЃРјР°СЂС‚-С‡Р°СЃС‹! РўСЂРµРєРµСЂ СЃРЅР° РѕС‡РµРЅСЊ С‚РѕС‡РЅС‹Р№, GPS СЂР°Р±РѕС‚Р°РµС‚ РѕС‚Р»РёС‡РЅРѕ.', status: 'approved', created_at: '2024-01-15T09:00:00.000Z' },
+            { id: 4, product_id: 4, user_id: 2, user_name: 'Test User', rating: 3, text: 'РљР»Р°РІРёР°С‚СѓСЂР° РЅРѕСЂРј, РЅРѕ РєР»Р°РІРёС€Рё СЃР»РёС€РєРѕРј РіСЂРѕРјРєРёРµ РґР»СЏ РѕС„РёСЃР°. Р”Р»СЏ РґРѕРјР° РїРѕРґРѕР№РґС‘С‚.', status: 'pending', created_at: '2024-01-18T16:45:00.000Z' },
+            { id: 5, product_id: 7, user_id: 2, user_name: 'Test User', rating: 1, text: 'РЈР¶Р°СЃРЅРѕРµ РєР°С‡РµСЃС‚РІРѕ! РџРѕРґРѕС€РІР° РѕС‚РєР»РµРёР»Р°СЃСЊ С‡РµСЂРµР· РЅРµРґРµР»СЋ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ!', status: 'pending', created_at: '2024-01-20T11:30:00.000Z' },
+            { id: 6, product_id: 1, user_id: 2, user_name: 'Hacker', rating: 5, text: `<img src=x onerror="alert('XSS')"> РћС‚Р»РёС‡РЅС‹Р№ С‚РѕРІР°СЂ!`, status: 'pending', created_at: '2024-01-22T08:00:00.000Z' },
+            { id: 7, product_id: 5, user_id: 2, user_name: 'Test User', rating: 4, text: 'РҐРѕСЂРѕС€РёР№ РїРѕРІРµСЂР±Р°РЅРє, Р·Р°СЂСЏР¶Р°РµС‚ Р±С‹СЃС‚СЂРѕ. РќРµРјРЅРѕРіРѕ С‚СЏР¶РµР»РѕРІР°С‚.', status: 'approved', created_at: '2024-01-25T12:00:00.000Z' },
+            { id: 8, product_id: 3, user_id: 2, user_name: 'Test User', rating: 5, text: 'РЎСѓРјРєР° РїСЂРµРјРёСѓРј РєР»Р°СЃСЃР°! РљРѕР¶Р° РЅР°СЃС‚РѕСЏС‰Р°СЏ, РїР°С…РЅРµС‚ РїСЂРёСЏС‚РЅРѕ. РќРѕСѓС‚Р±СѓРє РІР»РµР·Р°РµС‚ РёРґРµР°Р»СЊРЅРѕ.', status: 'rejected', created_at: '2024-01-26T15:30:00.000Z' }
         ],
         wishlist: [
             { id: 1, user_id: 2, product_id: 1, created_at: '2024-01-10T10:00:00.000Z' },
@@ -275,17 +275,17 @@ const DATA = loadData();
 // ============ MIDDLEWARE ============
 const auth = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Требуется авторизация' });
+    if (!token) return res.status(401).json({ error: 'РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ' });
     try {
         req.user = jwt.verify(token, JWT_SECRET);
         next();
     } catch (e) {
-        res.status(403).json({ error: 'Недействительный токен' });
+        res.status(403).json({ error: 'РќРµРґРµР№СЃС‚РІРёС‚РµР»СЊРЅС‹Р№ С‚РѕРєРµРЅ' });
     }
 };
 
 const adminOnly = (req, res, next) => {
-    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Доступ только для администратора' });
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Р”РѕСЃС‚СѓРї С‚РѕР»СЊРєРѕ РґР»СЏ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°' });
     next();
 };
 
@@ -356,11 +356,11 @@ function parsePromocodeDiscount(discount, type) {
     const parsedDiscount = parseFloat(discount);
 
     if (!Number.isFinite(parsedDiscount) || parsedDiscount <= 0) {
-        return { error: 'Укажите корректный размер скидки' };
+        return { error: 'РЈРєР°Р¶РёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ СЂР°Р·РјРµСЂ СЃРєРёРґРєРё' };
     }
 
     if (type === 'percent' && parsedDiscount > 100) {
-        return { error: 'Процент скидки не может быть больше 100' };
+        return { error: 'РџСЂРѕС†РµРЅС‚ СЃРєРёРґРєРё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 100' };
     }
 
     return { value: parsedDiscount };
@@ -372,14 +372,14 @@ function parsePromocodeExpiryDate(expiresAt, options = {}) {
 
     if (!rawValue) {
         if (required) {
-            return { error: 'Укажите дату окончания действия промокода' };
+            return { error: 'РЈРєР°Р¶РёС‚Рµ РґР°С‚Сѓ РѕРєРѕРЅС‡Р°РЅРёСЏ РґРµР№СЃС‚РІРёСЏ РїСЂРѕРјРѕРєРѕРґР°' };
         }
         return { value: null };
     }
 
     const dateOnly = rawValue.split('T')[0];
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
-        return { error: 'Укажите корректную дату в формате YYYY-MM-DD' };
+        return { error: 'РЈРєР°Р¶РёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ РґР°С‚Сѓ РІ С„РѕСЂРјР°С‚Рµ YYYY-MM-DD' };
     }
 
     const [year, month, day] = dateOnly.split('-').map(Number);
@@ -390,7 +390,7 @@ function parsePromocodeExpiryDate(expiresAt, options = {}) {
         parsedDate.getUTCDate() !== day;
 
     if (isInvalidDate) {
-        return { error: 'Укажите корректную дату окончания действия промокода' };
+        return { error: 'РЈРєР°Р¶РёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ РґР°С‚Сѓ РѕРєРѕРЅС‡Р°РЅРёСЏ РґРµР№СЃС‚РІРёСЏ РїСЂРѕРјРѕРєРѕРґР°' };
     }
 
     return { value: dateOnly };
@@ -406,17 +406,17 @@ function normalizeSearchText(value) {
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
     
-    // BUG #2 & #5: Нет валидации пароля и email формата
-    if (!email) return res.status(400).json({ error: 'Email обязателен' });
+    // BUG #2 & #5: РќРµС‚ РІР°Р»РёРґР°С†РёРё РїР°СЂРѕР»СЏ Рё email С„РѕСЂРјР°С‚Р°
+    if (!email) return res.status(400).json({ error: 'Email РѕР±СЏР·Р°С‚РµР»РµРЅ' });
     if (DATA.users.find(u => u.email === email)) {
-        return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+        return res.status(400).json({ error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј email СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚' });
     }
     
     const user = {
         id: DATA.nextUserId++,
         email,
         password: await bcrypt.hash(password || '', 10),
-        name: name || 'Пользователь',
+        name: name || 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ',
         role: 'user',
         created_at: new Date().toISOString()
     };
@@ -424,16 +424,16 @@ app.post('/api/auth/register', async (req, res) => {
     if (!persistOr500(res)) return;
 
     const token = jwt.sign({ id: user.id, email, role: 'user' }, JWT_SECRET, { expiresIn: '24h' });
-    res.json({ message: 'Регистрация успешна', token, user: { id: user.id, email, name: user.name, role: 'user' } });
+    res.json({ message: 'Р РµРіРёСЃС‚СЂР°С†РёСЏ СѓСЃРїРµС€РЅР°', token, user: { id: user.id, email, name: user.name, role: 'user' } });
 });
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     const user = DATA.users.find(u => u.email === email);
-    if (!user) return res.status(401).json({ error: 'Неверный email или пароль' });
+    if (!user) return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ email РёР»Рё РїР°СЂРѕР»СЊ' });
     
     const valid = await bcrypt.compare(password || '', user.password);
-    if (!valid) return res.status(401).json({ error: 'Неверный email или пароль' });
+    if (!valid) return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ email РёР»Рё РїР°СЂРѕР»СЊ' });
     
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
@@ -441,7 +441,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/me', auth, (req, res) => {
     const user = DATA.users.find(u => u.id === req.user.id);
-    if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (!user) return res.status(404).json({ error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ' });
     res.json({ id: user.id, email: user.email, name: user.name, role: user.role });
 });
 
@@ -488,7 +488,7 @@ app.get('/api/products/meta/categories', (req, res) => {
 app.get('/api/products/:id', (req, res) => {
     disableConditionalGet(req, res);
     const product = DATA.products.find(p => p.id === parseInt(req.params.id) && p.active);
-    if (!product) return res.status(404).json({ error: 'Товар не найден' });
+    if (!product) return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ' });
     res.json({
         ...toPublicProduct(product),
         ...getProductReviewStats(product.id)
@@ -514,11 +514,8 @@ app.get('/api/cart', auth, (req, res) => {
         })
         .filter(Boolean);
     
-    // BUG #1: Неправильный расчёт при quantity > 99
-    let total = items.reduce((sum, i) => {
-        let t = i.price * i.quantity;
-        if (i.quantity > 99) t = i.price * (i.quantity - 200);
-        return sum + t;
+    const total = items.reduce((sum, i) => {
+        return sum + (i.price * i.quantity);
     }, 0);
     
     res.json({ items, total: Math.round(total * 100) / 100 });
@@ -528,17 +525,17 @@ app.post('/api/cart/add', auth, (req, res) => {
     const productId = toIntegerOrNull(req.body.productId);
     const quantity = toIntegerOrNull(req.body.quantity ?? 1);
     if (productId === null || quantity === null || quantity <= 0) {
-        return res.status(400).json({ error: 'Некорректное количество' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ' });
     }
 
     const product = DATA.products.find(p => p.id === productId && p.active);
-    if (!product) return res.status(404).json({ error: 'Товар не найден' });
+    if (!product) return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ' });
     
     const existingItem = DATA.cart.find(c => c.user_id === req.user.id && c.product_id === productId);
     const currentInCart = existingItem ? existingItem.quantity : 0;
     
     if (currentInCart + quantity > product.stock) {
-        return res.status(400).json({ error: `Недостаточно товара. Доступно: ${product.stock}, в корзине: ${currentInCart}` });
+        return res.status(400).json({ error: `РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ С‚РѕРІР°СЂР°. Р”РѕСЃС‚СѓРїРЅРѕ: ${product.stock}, РІ РєРѕСЂР·РёРЅРµ: ${currentInCart}` });
     }
     
     if (existingItem) {
@@ -547,38 +544,38 @@ app.post('/api/cart/add', auth, (req, res) => {
         DATA.cart.push({ id: DATA.nextCartId++, user_id: req.user.id, product_id: productId, quantity });
     }
     if (!persistOr500(res)) return;
-    res.json({ message: 'Товар добавлен в корзину' });
+    res.json({ message: 'РўРѕРІР°СЂ РґРѕР±Р°РІР»РµРЅ РІ РєРѕСЂР·РёРЅСѓ' });
 });
 
 app.put('/api/cart/:id', auth, (req, res) => {
     const item = DATA.cart.find(c => c.id === parseInt(req.params.id) && c.user_id === req.user.id);
-    if (!item) return res.status(404).json({ error: 'Товар не найден в корзине' });
+    if (!item) return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ РІ РєРѕСЂР·РёРЅРµ' });
     
     const newQuantity = toIntegerOrNull(req.body.quantity);
     if (newQuantity === null || newQuantity < 0) {
-        return res.status(400).json({ error: 'Некорректное количество' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ' });
     }
 
     if (newQuantity === 0) {
         DATA.cart = DATA.cart.filter(c => c.id !== item.id);
         if (!persistOr500(res)) return;
-        return res.json({ message: 'Товар удалён из корзины' });
+        return res.json({ message: 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ РёР· РєРѕСЂР·РёРЅС‹' });
     }
     
     const product = DATA.products.find(p => p.id === item.product_id);
     if (newQuantity > product.stock) {
-        return res.status(400).json({ error: `Недостаточно товара. Доступно: ${product.stock}` });
+        return res.status(400).json({ error: `РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ С‚РѕРІР°СЂР°. Р”РѕСЃС‚СѓРїРЅРѕ: ${product.stock}` });
     }
     
     item.quantity = newQuantity;
     if (!persistOr500(res)) return;
-    res.json({ message: 'Корзина обновлена' });
+    res.json({ message: 'РљРѕСЂР·РёРЅР° РѕР±РЅРѕРІР»РµРЅР°' });
 });
 
 app.delete('/api/cart/:id', auth, (req, res) => {
     DATA.cart = DATA.cart.filter(c => !(c.id === parseInt(req.params.id) && c.user_id === req.user.id));
     if (!persistOr500(res)) return;
-    res.json({ message: 'Товар удалён' });
+    res.json({ message: 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ' });
 });
 
 // ============ PROMOCODES ROUTES ============
@@ -587,29 +584,29 @@ app.post('/api/promocodes/apply', auth, (req, res) => {
     const normalizedCode = typeof code === 'string' ? code.trim().toUpperCase() : '';
 
     if (!normalizedCode) {
-        return res.status(400).json({ error: 'Введите промокод' });
+        return res.status(400).json({ error: 'Р’РІРµРґРёС‚Рµ РїСЂРѕРјРѕРєРѕРґ' });
     }
 
     const promo = DATA.promocodes.find(p => String(p.code || '').toUpperCase() === normalizedCode);
 
     if (!promo) {
-        return res.status(400).json({ error: 'Промокод не найден' });
+        return res.status(400).json({ error: 'РџСЂРѕРјРѕРєРѕРґ РЅРµ РЅР°Р№РґРµРЅ' });
     }
 
     if (!promo.active) {
-        return res.status(400).json({ error: 'Промокод неактивен' });
+        return res.status(400).json({ error: 'РџСЂРѕРјРѕРєРѕРґ РЅРµР°РєС‚РёРІРµРЅ' });
     }
 
     if (isPromocodeExpired(promo.expires_at)) {
-        return res.status(400).json({ error: 'Промокод больше не действует' });
+        return res.status(400).json({ error: 'РџСЂРѕРјРѕРєРѕРґ Р±РѕР»СЊС€Рµ РЅРµ РґРµР№СЃС‚РІСѓРµС‚' });
     }
 
     if (hasUserUsedPromocode(req.user.id, promo.code)) {
-        return res.status(400).json({ error: 'Вы уже использовали этот промокод' });
+        return res.status(400).json({ error: 'Р’С‹ СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°Р»Рё СЌС‚РѕС‚ РїСЂРѕРјРѕРєРѕРґ' });
     }
 
     if (promo.used_count >= promo.max_uses) {
-        return res.status(400).json({ error: 'Лимит использования промокода исчерпан' });
+        return res.status(400).json({ error: 'Р›РёРјРёС‚ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ РїСЂРѕРјРѕРєРѕРґР° РёСЃС‡РµСЂРїР°РЅ' });
     }
 
     const cartItems = DATA.cart.filter(c => c.user_id === req.user.id);
@@ -620,7 +617,7 @@ app.post('/api/promocodes/apply', auth, (req, res) => {
 
     if (cartTotal < promo.min_order) {
         return res.status(400).json({
-            error: `Минимальная сумма заказа для этого промокода: ${promo.min_order} ₽`
+            error: `РњРёРЅРёРјР°Р»СЊРЅР°СЏ СЃСѓРјРјР° Р·Р°РєР°Р·Р° РґР»СЏ СЌС‚РѕРіРѕ РїСЂРѕРјРѕРєРѕРґР°: ${promo.min_order} в‚Ѕ`
         });
     }
 
@@ -637,7 +634,7 @@ app.post('/api/promocodes/apply', auth, (req, res) => {
     const newTotal = Math.max(minPayableTotal, cartTotal - discount);
 
     res.json({
-        message: 'Промокод применён',
+        message: 'РџСЂРѕРјРѕРєРѕРґ РїСЂРёРјРµРЅС‘РЅ',
         code: promo.code,
         discount: Math.round(discount * 100) / 100,
         discountPercent: promo.type === 'percent' ? promo.discount : null,
@@ -652,7 +649,7 @@ app.get('/api/promocodes/check/:code', (req, res) => {
         p => p.code.toUpperCase() === req.params.code.toUpperCase() && p.active && !isPromocodeExpired(p.expires_at)
     );
     if (!promo) {
-        return res.status(404).json({ error: 'Промокод не найден' });
+        return res.status(404).json({ error: 'РџСЂРѕРјРѕРєРѕРґ РЅРµ РЅР°Р№РґРµРЅ' });
     }
     res.json({
         code: promo.code,
@@ -665,7 +662,7 @@ app.get('/api/promocodes/check/:code', (req, res) => {
 
 // ============ REVIEWS ROUTES ============
 
-// Получить отзывы для товара
+// РџРѕР»СѓС‡РёС‚СЊ РѕС‚Р·С‹РІС‹ РґР»СЏ С‚РѕРІР°СЂР°
 app.get('/api/reviews/product/:id', (req, res) => {
     const productId = parseInt(req.params.id, 10);
     if (!Number.isInteger(productId) || productId <= 0) {
@@ -720,12 +717,12 @@ app.get('/api/reviews/product/:id', (req, res) => {
 app.get('/api/reviews/eligibility/:id', auth, (req, res) => {
     const productId = parseInt(req.params.id, 10);
     if (!Number.isInteger(productId) || productId <= 0) {
-        return res.status(400).json({ error: 'Некорректный идентификатор товара' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С‚РѕРІР°СЂР°' });
     }
 
     const product = DATA.products.find(p => p.id === productId && p.active === 1);
     if (!product) {
-        return res.status(404).json({ error: 'Товар не найден' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ' });
     }
 
     const hasDelivered = hasUserDeliveredOrderForProduct(req.user.id, productId);
@@ -747,7 +744,7 @@ app.get('/api/reviews/eligibility/:id', auth, (req, res) => {
     });
 });
 
-// Добавить отзыв
+// Р”РѕР±Р°РІРёС‚СЊ РѕС‚Р·С‹РІ
 app.post('/api/reviews', auth, (req, res) => {
     const { productId, rating, text } = req.body;
     const parsedProductId = parseInt(productId, 10);
@@ -755,12 +752,12 @@ app.post('/api/reviews', auth, (req, res) => {
     const normalizedText = typeof text === 'string' ? text.trim() : '';
 
     if (!Number.isInteger(parsedProductId) || parsedProductId <= 0) {
-        return res.status(400).json({ error: 'Некорректный идентификатор товара' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С‚РѕРІР°СЂР°' });
     }
 
     const product = DATA.products.find(p => p.id === parsedProductId && p.active === 1);
     if (!product) {
-        return res.status(404).json({ error: 'Товар не найден' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ' });
     }
 
     if (!hasUserDeliveredOrderForProduct(req.user.id, parsedProductId)) {
@@ -768,19 +765,19 @@ app.post('/api/reviews', auth, (req, res) => {
     }
 
     if (getUserReviewForProduct(req.user.id, parsedProductId)) {
-        return res.status(400).json({ error: 'Вы уже оставляли отзыв на этот товар' });
+        return res.status(400).json({ error: 'Р’С‹ СѓР¶Рµ РѕСЃС‚Р°РІР»СЏР»Рё РѕС‚Р·С‹РІ РЅР° СЌС‚РѕС‚ С‚РѕРІР°СЂ' });
     }
 
     if (!Number.isInteger(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-        return res.status(400).json({ error: 'Рейтинг должен быть от 1 до 5' });
+        return res.status(400).json({ error: 'Р РµР№С‚РёРЅРі РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ 1 РґРѕ 5' });
     }
 
     if (!normalizedText || normalizedText.length < 3) {
-        return res.status(400).json({ error: 'Отзыв слишком короткий (минимум 3 символа)' });
+        return res.status(400).json({ error: 'РћС‚Р·С‹РІ СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№ (РјРёРЅРёРјСѓРј 3 СЃРёРјРІРѕР»Р°)' });
     }
 
     if (normalizedText.length > 1000) {
-        return res.status(400).json({ error: 'Отзыв слишком длинный (максимум 1000 символов)' });
+        return res.status(400).json({ error: 'РћС‚Р·С‹РІ СЃР»РёС€РєРѕРј РґР»РёРЅРЅС‹Р№ (РјР°РєСЃРёРјСѓРј 1000 СЃРёРјРІРѕР»РѕРІ)' });
     }
 
     const user = DATA.users.find(u => u.id === req.user.id);
@@ -800,7 +797,7 @@ app.post('/api/reviews', auth, (req, res) => {
     if (!persistOr500(res)) return;
 
     res.json({
-        message: 'Отзыв отправлен на модерацию',
+        message: 'РћС‚Р·С‹РІ РѕС‚РїСЂР°РІР»РµРЅ РЅР° РјРѕРґРµСЂР°С†РёСЋ',
         review: {
             id: review.id,
             status: review.status,
@@ -816,7 +813,7 @@ app.get('/api/reviews/my', auth, (req, res) => {
             const product = DATA.products.find(p => p.id === r.product_id);
             return { 
                 ...r, 
-                product_name: product?.name || 'Товар удалён',
+                product_name: product?.name || 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ',
                 product_image: product?.image
             };
         })
@@ -825,18 +822,18 @@ app.get('/api/reviews/my', auth, (req, res) => {
     res.json(reviews);
 });
 
-// Удалить свой отзыв
+// РЈРґР°Р»РёС‚СЊ СЃРІРѕР№ РѕС‚Р·С‹РІ
 app.delete('/api/reviews/:id', auth, (req, res) => {
     const reviewId = parseInt(req.params.id);
     const review = DATA.reviews.find(r => r.id === reviewId && r.user_id === req.user.id);
     
     if (!review) {
-        return res.status(404).json({ error: 'Отзыв не найден' });
+        return res.status(404).json({ error: 'РћС‚Р·С‹РІ РЅРµ РЅР°Р№РґРµРЅ' });
     }
     
     DATA.reviews = DATA.reviews.filter(r => r.id !== reviewId);
     if (!persistOr500(res)) return;
-    res.json({ message: 'Отзыв удалён' });
+    res.json({ message: 'РћС‚Р·С‹РІ СѓРґР°Р»С‘РЅ' });
 });
 
 // ============ ORDERS ROUTES ============
@@ -850,51 +847,51 @@ app.post('/api/orders/checkout', auth, (req, res) => {
     const normalizedPromocode = typeof promocode === 'string' ? promocode.trim() : '';
     
     if (normalizedAddress.length < 10) {
-        return res.status(400).json({ error: 'Введите полный адрес доставки (минимум 10 символов)' });
+        return res.status(400).json({ error: 'Р’РІРµРґРёС‚Рµ РїРѕР»РЅС‹Р№ Р°РґСЂРµСЃ РґРѕСЃС‚Р°РІРєРё (РјРёРЅРёРјСѓРј 10 СЃРёРјРІРѕР»РѕРІ)' });
     }
     
     if (normalizedAddress.length > MAX_SHIPPING_ADDRESS_LENGTH) {
-        return res.status(400).json({ error: 'Адрес не должен превышать 500 символов' });
+        return res.status(400).json({ error: 'РђРґСЂРµСЃ РЅРµ РґРѕР»Р¶РµРЅ РїСЂРµРІС‹С€Р°С‚СЊ 500 СЃРёРјРІРѕР»РѕРІ' });
     }
     
     const cleanCard = normalizedCardNumber.replace(/\s/g, '');
     const testCards = ['4242424242424242', '5555555555554444', '4000000000000002'];
     
     if (!/^\d{16}$/.test(cleanCard)) {
-        return res.status(400).json({ error: 'Номер карты должен содержать 16 цифр' });
+        return res.status(400).json({ error: 'РќРѕРјРµСЂ РєР°СЂС‚С‹ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ 16 С†РёС„СЂ' });
     }
     if (!testCards.includes(cleanCard)) {
-        return res.status(400).json({ error: 'Используйте тестовую карту: 4242 4242 4242 4242' });
+        return res.status(400).json({ error: 'РСЃРїРѕР»СЊР·СѓР№С‚Рµ С‚РµСЃС‚РѕРІСѓСЋ РєР°СЂС‚Сѓ: 4242 4242 4242 4242' });
     }
     if (!normalizedCardExpiry || !/^\d{2}\/\d{2}$/.test(normalizedCardExpiry)) {
-        return res.status(400).json({ error: 'Введите срок действия в формате MM/YY' });
+        return res.status(400).json({ error: 'Р’РІРµРґРёС‚Рµ СЃСЂРѕРє РґРµР№СЃС‚РІРёСЏ РІ С„РѕСЂРјР°С‚Рµ MM/YY' });
     }
     
     const [month, year] = normalizedCardExpiry.split('/').map(Number);
     if (month < 1 || month > 12) {
-        return res.status(400).json({ error: 'Некорректный месяц' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РјРµСЃСЏС†' });
     }
     const expDate = new Date(2000 + year, month);
     if (expDate < new Date()) {
-        return res.status(400).json({ error: 'Срок действия карты истёк' });
+        return res.status(400).json({ error: 'РЎСЂРѕРє РґРµР№СЃС‚РІРёСЏ РєР°СЂС‚С‹ РёСЃС‚С‘Рє' });
     }
     
     if (!normalizedCardCvc || !/^\d{3}$/.test(normalizedCardCvc)) {
-        return res.status(400).json({ error: 'CVC должен содержать 3 цифры' });
+        return res.status(400).json({ error: 'CVC РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ 3 С†РёС„СЂС‹' });
     }
     
     const cartItems = DATA.cart.filter(c => c.user_id === req.user.id);
     if (!cartItems.length) {
-        return res.status(400).json({ error: 'Корзина пуста' });
+        return res.status(400).json({ error: 'РљРѕСЂР·РёРЅР° РїСѓСЃС‚Р°' });
     }
     
     for (const item of cartItems) {
         const product = DATA.products.find(p => p.id === item.product_id);
         if (!product) {
-            return res.status(400).json({ error: 'Один из товаров не найден' });
+            return res.status(400).json({ error: 'РћРґРёРЅ РёР· С‚РѕРІР°СЂРѕРІ РЅРµ РЅР°Р№РґРµРЅ' });
         }
         if (item.quantity > product.stock) {
-            return res.status(400).json({ error: `Недостаточно товара "${product.name}". Доступно: ${product.stock}` });
+            return res.status(400).json({ error: `РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ С‚РѕРІР°СЂР° "${product.name}". Р”РѕСЃС‚СѓРїРЅРѕ: ${product.stock}` });
         }
     }
     
@@ -913,10 +910,10 @@ app.post('/api/orders/checkout', auth, (req, res) => {
             p => String(p.code || '').toUpperCase() === promoCode && p.active
         );
         if (promo && isPromocodeExpired(promo.expires_at)) {
-            return res.status(400).json({ error: 'Промокод больше не действует' });
+            return res.status(400).json({ error: 'РџСЂРѕРјРѕРєРѕРґ Р±РѕР»СЊС€Рµ РЅРµ РґРµР№СЃС‚РІСѓРµС‚' });
         }
         if (promo && hasUserUsedPromocode(req.user.id, promo.code)) {
-            return res.status(400).json({ error: 'Вы уже использовали этот промокод' });
+            return res.status(400).json({ error: 'Р’С‹ СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°Р»Рё СЌС‚РѕС‚ РїСЂРѕРјРѕРєРѕРґ' });
         }
         if (promo && total >= promo.min_order) {
             if (promo.type === 'percent') {
@@ -962,7 +959,7 @@ app.post('/api/orders/checkout', auth, (req, res) => {
     if (!persistOr500(res)) return;
     
     res.json({ 
-        message: 'Заказ успешно оформлен', 
+        message: 'Р—Р°РєР°Р· СѓСЃРїРµС€РЅРѕ РѕС„РѕСЂРјР»РµРЅ', 
         orderId: order.id, 
         total: order.total,
         discount: order.discount,
@@ -980,7 +977,7 @@ app.get('/api/orders', auth, (req, res) => {
 
 app.get('/api/orders/:id', auth, (req, res) => {
     const order = DATA.orders.find(o => o.id === parseInt(req.params.id) && o.user_id === req.user.id);
-    if (!order) return res.status(404).json({ error: 'Заказ не найден' });
+    if (!order) return res.status(404).json({ error: 'Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ' });
     
     const items = DATA.orderItems.filter(i => i.order_id === order.id);
     res.json({ ...order, items });
@@ -1011,9 +1008,9 @@ app.get('/api/admin/products', auth, adminOnly, (req, res) => {
 
 app.post('/api/admin/products', auth, adminOnly, (req, res) => {
     const { name, description, price, stock, category, image } = req.body;
-    // BUG #3: Нет проверки на отрицательную цену
+    // BUG #3: РќРµС‚ РїСЂРѕРІРµСЂРєРё РЅР° РѕС‚СЂРёС†Р°С‚РµР»СЊРЅСѓСЋ С†РµРЅСѓ
     if (!name || name.trim().length === 0) {
-        return res.status(400).json({ error: 'Название товара обязательно' });
+        return res.status(400).json({ error: 'РќР°Р·РІР°РЅРёРµ С‚РѕРІР°СЂР° РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ' });
     }
     
     const product = {
@@ -1022,19 +1019,19 @@ app.post('/api/admin/products', auth, adminOnly, (req, res) => {
         description: description?.trim() || '',
         price: parseFloat(price) || 0,
         stock: parseInt(stock) || 0,
-        category: category?.trim() || 'Другое',
+        category: category?.trim() || 'Р”СЂСѓРіРѕРµ',
         image: normalizeProductImage(image),
         active: 1,
         created_at: new Date().toISOString()
     };
     DATA.products.push(product);
     if (!persistOr500(res)) return;
-    res.json({ id: product.id, message: 'Товар создан' });
+    res.json({ id: product.id, message: 'РўРѕРІР°СЂ СЃРѕР·РґР°РЅ' });
 });
 
 app.put('/api/admin/products/:id', auth, adminOnly, (req, res) => {
     const product = DATA.products.find(p => p.id === parseInt(req.params.id));
-    if (!product) return res.status(404).json({ error: 'Товар не найден' });
+    if (!product) return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ' });
     
     const { name, description, price, stock, category, image, active } = req.body;
     
@@ -1047,14 +1044,14 @@ app.put('/api/admin/products/:id', auth, adminOnly, (req, res) => {
     if (active !== undefined) product.active = active ? 1 : 0;
     if (!persistOr500(res)) return;
     
-    res.json({ message: 'Товар обновлён' });
+    res.json({ message: 'РўРѕРІР°СЂ РѕР±РЅРѕРІР»С‘РЅ' });
 });
 
 app.delete('/api/admin/products/:id', auth, adminOnly, (req, res) => {
     const product = DATA.products.find(p => p.id === parseInt(req.params.id));
     if (product) product.active = 0;
     if (!persistOr500(res)) return;
-    res.json({ message: 'Товар удалён' });
+    res.json({ message: 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ' });
 });
 
 // Admin Orders
@@ -1074,18 +1071,18 @@ app.get('/api/admin/orders', auth, adminOnly, (req, res) => {
 
 app.put('/api/admin/orders/:id/status', auth, adminOnly, (req, res) => {
     const order = DATA.orders.find(o => o.id === parseInt(req.params.id));
-    if (!order) return res.status(404).json({ error: 'Заказ не найден' });
+    if (!order) return res.status(404).json({ error: 'Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ' });
     
     const { status } = req.body;
     const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
     
     if (!validStatuses.includes(status)) {
-        return res.status(400).json({ error: 'Некорректный статус' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ СЃС‚Р°С‚СѓСЃ' });
     }
     
     order.status = status;
     if (!persistOr500(res)) return;
-    res.json({ message: 'Статус заказа обновлён' });
+    res.json({ message: 'РЎС‚Р°С‚СѓСЃ Р·Р°РєР°Р·Р° РѕР±РЅРѕРІР»С‘РЅ' });
 });
 
 app.get('/api/admin/promocodes', auth, adminOnly, (req, res) => {
@@ -1097,11 +1094,11 @@ app.post('/api/admin/promocodes', auth, adminOnly, (req, res) => {
     const normalizedType = normalizePromocodeType(type);
 
     if (!code || code.trim().length < 3) {
-        return res.status(400).json({ error: 'Код должен содержать минимум 3 символа' });
+        return res.status(400).json({ error: 'РљРѕРґ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РјРёРЅРёРјСѓРј 3 СЃРёРјРІРѕР»Р°' });
     }
 
     if (DATA.promocodes.find(p => p.code.toUpperCase() === code.toUpperCase())) {
-        return res.status(400).json({ error: 'Промокод уже существует' });
+        return res.status(400).json({ error: 'РџСЂРѕРјРѕРєРѕРґ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚' });
     }
 
     const validatedDiscount = parsePromocodeDiscount(discount, normalizedType);
@@ -1129,12 +1126,12 @@ app.post('/api/admin/promocodes', auth, adminOnly, (req, res) => {
 
     DATA.promocodes.push(promo);
     if (!persistOr500(res)) return;
-    res.json({ id: promo.id, message: 'Промокод создан' });
+    res.json({ id: promo.id, message: 'РџСЂРѕРјРѕРєРѕРґ СЃРѕР·РґР°РЅ' });
 });
 
 app.put('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
     const promo = DATA.promocodes.find(p => p.id === parseInt(req.params.id));
-    if (!promo) return res.status(404).json({ error: 'Промокод не найден' });
+    if (!promo) return res.status(404).json({ error: 'РџСЂРѕРјРѕРєРѕРґ РЅРµ РЅР°Р№РґРµРЅ' });
 
     const { discount, type, min_order, max_uses, expires_at, active } = req.body;
     const nextType = type !== undefined ? normalizePromocodeType(type) : promo.type;
@@ -1149,7 +1146,7 @@ app.put('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
 
     if (type !== undefined) {
         if (nextType === 'percent' && promo.discount > 100) {
-            return res.status(400).json({ error: 'Процент скидки не может быть больше 100' });
+            return res.status(400).json({ error: 'РџСЂРѕС†РµРЅС‚ СЃРєРёРґРєРё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 100' });
         }
         promo.type = nextType;
     }
@@ -1166,16 +1163,16 @@ app.put('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
     if (active !== undefined) promo.active = active ? 1 : 0;
     if (!persistOr500(res)) return;
 
-    res.json({ message: 'Промокод обновлён' });
+    res.json({ message: 'РџСЂРѕРјРѕРєРѕРґ РѕР±РЅРѕРІР»С‘РЅ' });
 });
 
 app.delete('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
     const index = DATA.promocodes.findIndex(p => p.id === parseInt(req.params.id));
-    if (index === -1) return res.status(404).json({ error: 'Промокод не найден' });
+    if (index === -1) return res.status(404).json({ error: 'РџСЂРѕРјРѕРєРѕРґ РЅРµ РЅР°Р№РґРµРЅ' });
 
     DATA.promocodes.splice(index, 1);
     if (!persistOr500(res)) return;
-    res.json({ message: 'Промокод удалён' });
+    res.json({ message: 'РџСЂРѕРјРѕРєРѕРґ СѓРґР°Р»С‘РЅ' });
 });
 
 // Admin Reviews
@@ -1186,14 +1183,14 @@ app.get('/api/admin/reviews', auth, adminOnly, (req, res) => {
             const user = DATA.users.find(u => u.id === r.user_id);
             return { 
                 ...r, 
-                product_name: product?.name || 'Товар удалён',
+                product_name: product?.name || 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ',
                 product_image: product?.image,
                 product_active: product?.active || 0,
                 user_email: user?.email
             };
         })
         .sort((a, b) => {
-            // Сначала pending, потом по дате
+            // РЎРЅР°С‡Р°Р»Р° pending, РїРѕС‚РѕРј РїРѕ РґР°С‚Рµ
             if (a.status === 'pending' && b.status !== 'pending') return -1;
             if (a.status !== 'pending' && b.status === 'pending') return 1;
             return new Date(b.created_at) - new Date(a.created_at);
@@ -1205,47 +1202,47 @@ app.get('/api/admin/reviews', auth, adminOnly, (req, res) => {
 app.put('/api/admin/reviews/:id/status', auth, adminOnly, (req, res) => {
     const review = DATA.reviews.find(r => r.id === parseInt(req.params.id));
     if (!review) {
-        return res.status(404).json({ error: 'Отзыв не найден' });
+        return res.status(404).json({ error: 'РћС‚Р·С‹РІ РЅРµ РЅР°Р№РґРµРЅ' });
     }
     
     const { status } = req.body;
     const validStatuses = ['pending', 'approved', 'rejected'];
     
     if (!validStatuses.includes(status)) {
-        return res.status(400).json({ error: 'Некорректный статус. Допустимые: pending, approved, rejected' });
+        return res.status(400).json({ error: 'РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ СЃС‚Р°С‚СѓСЃ. Р”РѕРїСѓСЃС‚РёРјС‹Рµ: pending, approved, rejected' });
     }
     
     review.status = status;
     if (!persistOr500(res)) return;
-    res.json({ message: 'Статус отзыва обновлён' });
+    res.json({ message: 'РЎС‚Р°С‚СѓСЃ РѕС‚Р·С‹РІР° РѕР±РЅРѕРІР»С‘РЅ' });
 });
 
 app.delete('/api/admin/reviews/:id', auth, adminOnly, (req, res) => {
     const index = DATA.reviews.findIndex(r => r.id === parseInt(req.params.id));
     if (index === -1) {
-        return res.status(404).json({ error: 'Отзыв не найден' });
+        return res.status(404).json({ error: 'РћС‚Р·С‹РІ РЅРµ РЅР°Р№РґРµРЅ' });
     }
     
     DATA.reviews.splice(index, 1);
     if (!persistOr500(res)) return;
-    res.json({ message: 'Отзыв удалён' });
+    res.json({ message: 'РћС‚Р·С‹РІ СѓРґР°Р»С‘РЅ' });
 });
 
 // ============ WISHLIST ROUTES ============
 
-// Получить избранное пользователя
+// РџРѕР»СѓС‡РёС‚СЊ РёР·Р±СЂР°РЅРЅРѕРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 app.get('/api/wishlist', auth, (req, res) => {
-    // BUG #17: Не фильтруются удалённые/неактивные товары
-    // Правильно: .filter(p => p && p.active === 1)
+    // BUG #17: РќРµ С„РёР»СЊС‚СЂСѓСЋС‚СЃСЏ СѓРґР°Р»С‘РЅРЅС‹Рµ/РЅРµР°РєС‚РёРІРЅС‹Рµ С‚РѕРІР°СЂС‹
+    // РџСЂР°РІРёР»СЊРЅРѕ: .filter(p => p && p.active === 1)
     const items = DATA.wishlist
         .filter(w => w.user_id === req.user.id)
         .map(w => {
             const product = DATA.products.find(p => p.id === w.product_id);
-            // Возвращаем даже если товар удалён (это баг!)
+            // Р’РѕР·РІСЂР°С‰Р°РµРј РґР°Р¶Рµ РµСЃР»Рё С‚РѕРІР°СЂ СѓРґР°Р»С‘РЅ (СЌС‚Рѕ Р±Р°Рі!)
             return {
                 id: w.id,
                 product_id: w.product_id,
-                product: product || null, // может быть null если товар удалён
+                product: product || null, // РјРѕР¶РµС‚ Р±С‹С‚СЊ null РµСЃР»Рё С‚РѕРІР°СЂ СѓРґР°Р»С‘РЅ
                 added_at: w.created_at
             };
         })
@@ -1257,31 +1254,31 @@ app.get('/api/wishlist', auth, (req, res) => {
     });
 });
 
-// Добавить в избранное
+// Р”РѕР±Р°РІРёС‚СЊ РІ РёР·Р±СЂР°РЅРЅРѕРµ
 app.post('/api/wishlist/add', auth, (req, res) => {
     const { productId } = req.body;
     
     if (!productId) {
-        return res.status(400).json({ error: 'ID товара обязателен' });
+        return res.status(400).json({ error: 'ID С‚РѕРІР°СЂР° РѕР±СЏР·Р°С‚РµР»РµРЅ' });
     }
     
     const product = DATA.products.find(p => p.id === parseInt(productId) && p.active === 1);
     if (!product) {
-        return res.status(404).json({ error: 'Товар не найден' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ' });
     }
     
-    // BUG #16: Нет проверки на дубликаты!
-    // Правильно было бы:
+    // BUG #16: РќРµС‚ РїСЂРѕРІРµСЂРєРё РЅР° РґСѓР±Р»РёРєР°С‚С‹!
+    // РџСЂР°РІРёР»СЊРЅРѕ Р±С‹Р»Рѕ Р±С‹:
     // const existing = DATA.wishlist.find(w => w.user_id === req.user.id && w.product_id === parseInt(productId));
     // if (existing) {
-    //     return res.status(400).json({ error: 'Товар уже в избранном' });
+    //     return res.status(400).json({ error: 'РўРѕРІР°СЂ СѓР¶Рµ РІ РёР·Р±СЂР°РЅРЅРѕРј' });
     // }
     
-    // BUG #19: Нет лимита на количество товаров в избранном
-    // Правильно было бы:
+    // BUG #19: РќРµС‚ Р»РёРјРёС‚Р° РЅР° РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕРІР°СЂРѕРІ РІ РёР·Р±СЂР°РЅРЅРѕРј
+    // РџСЂР°РІРёР»СЊРЅРѕ Р±С‹Р»Рѕ Р±С‹:
     // const userWishlistCount = DATA.wishlist.filter(w => w.user_id === req.user.id).length;
     // if (userWishlistCount >= 50) {
-    //     return res.status(400).json({ error: 'Достигнут лимит избранного (50 товаров)' });
+    //     return res.status(400).json({ error: 'Р”РѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РёР·Р±СЂР°РЅРЅРѕРіРѕ (50 С‚РѕРІР°СЂРѕРІ)' });
     // }
     
     const wishlistItem = {
@@ -1294,26 +1291,26 @@ app.post('/api/wishlist/add', auth, (req, res) => {
     DATA.wishlist.push(wishlistItem);
     
     res.json({ 
-        message: 'Товар добавлен в избранное',
+        message: 'РўРѕРІР°СЂ РґРѕР±Р°РІР»РµРЅ РІ РёР·Р±СЂР°РЅРЅРѕРµ',
         id: wishlistItem.id
     });
 });
 
-// Удалить из избранного
+// РЈРґР°Р»РёС‚СЊ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ
 app.delete('/api/wishlist/:id', auth, (req, res) => {
     const index = DATA.wishlist.findIndex(
         w => w.id === parseInt(req.params.id) && w.user_id === req.user.id
     );
     
     if (index === -1) {
-        return res.status(404).json({ error: 'Товар не найден в избранном' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ РІ РёР·Р±СЂР°РЅРЅРѕРј' });
     }
     
     DATA.wishlist.splice(index, 1);
-    res.json({ message: 'Товар удалён из избранного' });
+    res.json({ message: 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ' });
 });
 
-// Удалить из избранного по ID товара
+// РЈРґР°Р»РёС‚СЊ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ РїРѕ ID С‚РѕРІР°СЂР°
 app.delete('/api/wishlist/product/:productId', auth, (req, res) => {
     const productId = parseInt(req.params.productId);
     const initialLength = DATA.wishlist.length;
@@ -1323,13 +1320,13 @@ app.delete('/api/wishlist/product/:productId', auth, (req, res) => {
     );
     
     if (DATA.wishlist.length === initialLength) {
-        return res.status(404).json({ error: 'Товар не найден в избранном' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ РІ РёР·Р±СЂР°РЅРЅРѕРј' });
     }
     
-    res.json({ message: 'Товар удалён из избранного' });
+    res.json({ message: 'РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ' });
 });
 
-// Проверить, есть ли товар в избранном
+// РџСЂРѕРІРµСЂРёС‚СЊ, РµСЃС‚СЊ Р»Рё С‚РѕРІР°СЂ РІ РёР·Р±СЂР°РЅРЅРѕРј
 app.get('/api/wishlist/check/:productId', auth, (req, res) => {
     const productId = parseInt(req.params.productId);
     const inWishlist = DATA.wishlist.some(
@@ -1338,39 +1335,39 @@ app.get('/api/wishlist/check/:productId', auth, (req, res) => {
     res.json({ inWishlist });
 });
 
-// Получить количество товаров в избранном
+// РџРѕР»СѓС‡РёС‚СЊ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕРІР°СЂРѕРІ РІ РёР·Р±СЂР°РЅРЅРѕРј
 app.get('/api/wishlist/count', auth, (req, res) => {
     const count = DATA.wishlist.filter(w => w.user_id === req.user.id).length;
     res.json({ count });
 });
 
-// Переместить из избранного в корзину
+// РџРµСЂРµРјРµСЃС‚РёС‚СЊ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ РІ РєРѕСЂР·РёРЅСѓ
 app.post('/api/wishlist/:id/move-to-cart', auth, (req, res) => {
     const wishlistItem = DATA.wishlist.find(
         w => w.id === parseInt(req.params.id) && w.user_id === req.user.id
     );
     
     if (!wishlistItem) {
-        return res.status(404).json({ error: 'Товар не найден в избранном' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ РІ РёР·Р±СЂР°РЅРЅРѕРј' });
     }
     
     const product = DATA.products.find(p => p.id === wishlistItem.product_id && p.active === 1);
     if (!product) {
-        return res.status(404).json({ error: 'Товар больше не доступен' });
+        return res.status(404).json({ error: 'РўРѕРІР°СЂ Р±РѕР»СЊС€Рµ РЅРµ РґРѕСЃС‚СѓРїРµРЅ' });
     }
     
     if (product.stock < 1) {
-        return res.status(400).json({ error: 'Товар закончился на складе' });
+        return res.status(400).json({ error: 'РўРѕРІР°СЂ Р·Р°РєРѕРЅС‡РёР»СЃСЏ РЅР° СЃРєР»Р°РґРµ' });
     }
     
-    // Добавляем в корзину
+    // Р”РѕР±Р°РІР»СЏРµРј РІ РєРѕСЂР·РёРЅСѓ
     const existingCartItem = DATA.cart.find(
         c => c.user_id === req.user.id && c.product_id === wishlistItem.product_id
     );
     
     if (existingCartItem) {
         if (existingCartItem.quantity + 1 > product.stock) {
-            return res.status(400).json({ error: `Недостаточно товара. Доступно: ${product.stock}` });
+            return res.status(400).json({ error: `РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ С‚РѕРІР°СЂР°. Р”РѕСЃС‚СѓРїРЅРѕ: ${product.stock}` });
         }
         existingCartItem.quantity += 1;
     } else {
@@ -1382,15 +1379,15 @@ app.post('/api/wishlist/:id/move-to-cart', auth, (req, res) => {
         });
     }
     
-    // Удаляем из избранного
+    // РЈРґР°Р»СЏРµРј РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ
     DATA.wishlist = DATA.wishlist.filter(w => w.id !== wishlistItem.id);
     
-    res.json({ message: 'Товар перемещён в корзину' });
+    res.json({ message: 'РўРѕРІР°СЂ РїРµСЂРµРјРµС‰С‘РЅ РІ РєРѕСЂР·РёРЅСѓ' });
 });
 
 // ============ ADMIN WISHLIST STATS ============
 app.get('/api/admin/wishlist/stats', auth, adminOnly, (req, res) => {
-    // Статистика популярности товаров в избранном
+    // РЎС‚Р°С‚РёСЃС‚РёРєР° РїРѕРїСѓР»СЏСЂРЅРѕСЃС‚Рё С‚РѕРІР°СЂРѕРІ РІ РёР·Р±СЂР°РЅРЅРѕРј
     const productStats = {};
     
     DATA.wishlist.forEach(w => {
@@ -1398,7 +1395,7 @@ app.get('/api/admin/wishlist/stats', auth, adminOnly, (req, res) => {
             const product = DATA.products.find(p => p.id === w.product_id);
             productStats[w.product_id] = {
                 product_id: w.product_id,
-                product_name: product?.name || 'Удалённый товар',
+                product_name: product?.name || 'РЈРґР°Р»С‘РЅРЅС‹Р№ С‚РѕРІР°СЂ',
                 product_image: product?.image,
                 product_active: product?.active || 0,
                 count: 0
@@ -1439,7 +1436,7 @@ app.use((err, req, res, next) => {
     }
 
     console.error('Error:', err);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    res.status(500).json({ error: 'Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
 });
 
 // ============ START SERVER ============
@@ -1447,18 +1444,18 @@ function startServer(initialPort) {
     const port = Number(initialPort) || 3000;
     const server = app.listen(port, () => {
     console.log('');
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║                  QA Training Shop                         ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log(`║  🌐 Server:  http://localhost:${PORT}                        ║`);
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log('║  🔐 Access Code: PIZDUK                                   ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log('║  📧 Admin:   admin@shop.com / admin123                    ║');
-    console.log('║  📧 User:    user@test.com / user123                      ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log('║  💳 Card:    4242 4242 4242 4242                          ║');
-    console.log('╚═══════════════════════════════════════════════════════════╝');
+    console.log('в•”в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•—');
+    console.log('в•‘                  QA Training Shop                         в•‘');
+    console.log('в• в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•Ј');
+    console.log(`в•‘  рџЊђ Server:  http://localhost:${PORT}                        в•‘`);
+    console.log('в• в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•Ј');
+    console.log('в•‘  рџ”ђ Access Code: PIZDUK                                   в•‘');
+    console.log('в• в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•Ј');
+    console.log('в•‘  рџ“§ Admin:   admin@shop.com / admin123                    в•‘');
+    console.log('в•‘  рџ“§ User:    user@test.com / user123                      в•‘');
+    console.log('в• в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•Ј');
+    console.log('в•‘  рџ’і Card:    4242 4242 4242 4242                          в•‘');
+    console.log('в•љв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ќ');
     console.log(`Listening on port ${port}`);
     console.log('');
     });
