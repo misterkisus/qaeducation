@@ -35,7 +35,9 @@
         .product-rating .stars {
             color: #ffc107;
             font-size: 1.2rem;
-            letter-spacing: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
         .product-page-price {
             font-size: 2rem;
@@ -96,7 +98,9 @@
             color: #ffc107;
             font-size: 1.3rem;
             margin: 8px 0;
-            letter-spacing: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
         .stats-average .count {
             color: var(--text-light);
@@ -213,11 +217,16 @@
         .review-stars {
             color: #ffc107;
             margin-bottom: 10px;
-            letter-spacing: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
         .review-text {
             line-height: 1.7;
             color: var(--text);
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
         .review-status {
             font-size: 0.75rem;
@@ -382,7 +391,7 @@
                 document.title = currentProduct.name + ' - TechShop';
                 
                 // Загружаем отзывы и форму
-                loadReviewForm();
+                await loadReviewForm();
                 loadReviews(productId);
                 
             } catch (e) {
@@ -398,13 +407,53 @@
         }
 
         // ============ LOAD REVIEW FORM ============
-        function loadReviewForm() {
+        async function loadReviewForm() {
             const container = document.getElementById('review-form-container');
             
             if (!authToken) {
                 container.innerHTML = `
                     <div class="login-prompt">
                         <p><a href="/pages/login.html">Войдите</a>, чтобы оставить отзыв</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const eligibilityRes = await apiRequest(`/reviews/eligibility/${currentProduct.id}`);
+                const eligibility = await eligibilityRes.json();
+
+                if (!eligibilityRes.ok) {
+                    container.innerHTML = `
+                        <div class="login-prompt">
+                            <p>Не удалось определить возможность оставить отзыв</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (eligibility.alreadyReviewed) {
+                    container.innerHTML = `
+                        <div class="login-prompt">
+                            <p><i class="fas fa-check-circle"></i> Вы уже оставили отзыв на этот товар. Повторная публикация недоступна.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (!eligibility.hasPurchased) {
+                    container.innerHTML = `
+                        <div class="login-prompt">
+                            <p><i class="fas fa-lock"></i> Оценка и отзыв доступны только после покупки этого товара.</p>
+                        </div>
+                    `;
+                    return;
+                }
+            } catch (e) {
+                console.error('Failed to load review eligibility:', e);
+                container.innerHTML = `
+                    <div class="login-prompt">
+                        <p>Не удалось определить возможность оставить отзыв</p>
                     </div>
                 `;
                 return;
@@ -519,7 +568,8 @@
                     selectedRating = 0;
                     updateRatingDisplay();
                     
-                    // Перезагружаем отзывы
+                    // После отправки форму повторно показывать нельзя
+                    await loadReviewForm();
                     loadReviews(currentProduct.id);
                 } else {
                     showToast(data.error || 'Ошибка отправки отзыва', 'error');
@@ -602,7 +652,6 @@
                 return;
             }
             
-            // BUG #12: Показываются все отзывы, включая pending и rejected
             container.innerHTML = reviews.map(r => {
                 const starsHtml = getStarsHtml(r.rating);
                 const initial = r.user_name.charAt(0).toUpperCase();
@@ -612,21 +661,12 @@
                     year: 'numeric'
                 });
                 
-                // Показываем статус для не-approved отзывов
-                let statusBadge = '';
-                if (r.status === 'pending') {
-                    statusBadge = '<span class="review-status pending">На модерации</span>';
-                } else if (r.status === 'rejected') {
-                    statusBadge = '<span class="review-status rejected">Отклонён</span>';
-                }
-                
                 return `
                     <div class="review-item">
                         <div class="review-header">
                             <span class="review-author">
                                 <span class="avatar">${initial}</span>
                                 ${r.user_name}
-                                ${statusBadge}
                             </span>
                             <span class="review-date">${date}</span>
                         </div>
@@ -639,11 +679,19 @@
 
         // ============ HELPERS ============
         function getStarsHtml(rating) {
-            const fullStars = Math.floor(rating);
-            const hasHalf = rating % 1 >= 0.5;
+            const normalizedRating = Math.max(0, Math.min(5, Number(rating) || 0));
+            const roundedRating = Math.round(normalizedRating * 2) / 2;
+            const fullStars = Math.floor(roundedRating);
+            const hasHalf = roundedRating % 1 === 0.5;
             const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
-            
-            return '★'.repeat(fullStars) + (hasHalf ? '½' : '') + '☆'.repeat(emptyStars);
+
+            const fullStarHtml = '<i class="fa-solid fa-star" aria-hidden="true"></i>';
+            const halfStarHtml = '<i class="fa-solid fa-star-half-stroke" aria-hidden="true"></i>';
+            const emptyStarHtml = '<i class="fa-regular fa-star" aria-hidden="true"></i>';
+
+            return fullStarHtml.repeat(fullStars) +
+                (hasHalf ? halfStarHtml : '') +
+                emptyStarHtml.repeat(emptyStars);
         }
         
         function getReviewWord(count) {

@@ -289,6 +289,24 @@ function getProductReviewStats(productId) {
     };
 }
 
+function hasUserPurchasedProduct(userId, productId) {
+    const userOrderIds = new Set(
+        DATA.orders
+            .filter(order => order.user_id === userId && order.status !== 'cancelled')
+            .map(order => order.id)
+    );
+
+    return DATA.orderItems.some(
+        item => item.product_id === productId && userOrderIds.has(item.order_id)
+    );
+}
+
+function getUserReviewForProduct(userId, productId) {
+    return DATA.reviews.find(
+        review => review.user_id === userId && review.product_id === productId
+    );
+}
+
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
@@ -449,15 +467,13 @@ app.delete('/api/cart/:id', auth, (req, res) => {
 // Получить отзывы для товара
 app.get('/api/reviews/product/:id', (req, res) => {
     const productId = parseInt(req.params.id);
-    
-    // BUG #12 (Minor): Возвращаются ВСЕ отзывы, включая pending и rejected!
-    // Правильно было бы: .filter(r => r.status === 'approved')
+
     const reviews = DATA.reviews
-        .filter(r => r.product_id === productId)
+        .filter(r => r.product_id === productId && r.status === 'approved')
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     // Статистика считается только по одобренным
-    const approvedReviews = DATA.reviews.filter(r => r.product_id === productId && r.status === 'approved');
+    const approvedReviews = reviews;
     
     const stats = {
         total: approvedReviews.length,
@@ -477,75 +493,98 @@ app.get('/api/reviews/product/:id', (req, res) => {
     res.json({ reviews, stats });
 });
 
-// Добавить отзыв
-app.post('/api/reviews', auth, (req, res) => {
-    const { productId, rating, text } = req.body;
-    
-    // Проверка существования товара
-    const product = DATA.products.find(p => p.id === parseInt(productId) && p.active === 1);
+// Проверить, может ли пользователь оставить отзыв
+app.get('/api/reviews/eligibility/:id', auth, (req, res) => {
+    const productId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(productId) || productId <= 0) {
+        return res.status(400).json({ error: 'Некорректный идентификатор товара' });
+    }
+
+    const product = DATA.products.find(p => p.id === productId && p.active === 1);
     if (!product) {
         return res.status(404).json({ error: 'Товар не найден' });
     }
-    
-    // BUG #13 (Minor): Нет проверки, покупал ли пользователь этот товар!
-    // Правильно было бы:
-    // const hasPurchased = DATA.orderItems.some(oi => {
-    //     const order = DATA.orders.find(o => o.id === oi.order_id && o.user_id === req.user.id);
-    //     return order && oi.product_id === parseInt(productId);
-    // });
-    // if (!hasPurchased) {
-    //     return res.status(400).json({ error: 'Вы можете оставить отзыв только на купленный товар' });
-    // }
-    
-    // BUG #14 (Minor): Рейтинг 0 или > 5 принимается!
-    // Правильно было бы: if (!rating || rating < 1 || rating > 5)
-    if (!rating) {
-        return res.status(400).json({ error: 'Укажите рейтинг' });
+
+    const hasPurchased = hasUserPurchasedProduct(req.user.id, productId);
+    const existingReview = getUserReviewForProduct(req.user.id, productId);
+
+    res.json({
+        productId,
+        hasPurchased,
+        alreadyReviewed: Boolean(existingReview),
+        canReview: hasPurchased && !existingReview,
+        existingReview: existingReview
+            ? {
+                id: existingReview.id,
+                status: existingReview.status,
+                created_at: existingReview.created_at
+            }
+            : null
+    });
+});
+
+// Добавить отзыв
+app.post('/api/reviews', auth, (req, res) => {
+    const { productId, rating, text } = req.body;
+    const parsedProductId = parseInt(productId, 10);
+    const parsedRating = parseInt(rating, 10);
+    const normalizedText = typeof text === 'string' ? text.trim() : '';
+
+    if (!Number.isInteger(parsedProductId) || parsedProductId <= 0) {
+        return res.status(400).json({ error: 'Некорректный идентификатор товара' });
     }
-    
-    // Проверка текста
-    if (!text || text.trim().length < 3) {
+
+    const product = DATA.products.find(p => p.id === parsedProductId && p.active === 1);
+    if (!product) {
+        return res.status(404).json({ error: 'Товар не найден' });
+    }
+
+    if (!hasUserPurchasedProduct(req.user.id, parsedProductId)) {
+        return res.status(400).json({ error: 'Вы можете оставить отзыв только на купленный товар' });
+    }
+
+    if (getUserReviewForProduct(req.user.id, parsedProductId)) {
+        return res.status(400).json({ error: 'Вы уже оставляли отзыв на этот товар' });
+    }
+
+    if (!Number.isInteger(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+        return res.status(400).json({ error: 'Рейтинг должен быть от 1 до 5' });
+    }
+
+    if (!normalizedText || normalizedText.length < 3) {
         return res.status(400).json({ error: 'Отзыв слишком короткий (минимум 3 символа)' });
     }
-    
-    if (text.length > 1000) {
+
+    if (normalizedText.length > 1000) {
         return res.status(400).json({ error: 'Отзыв слишком длинный (максимум 1000 символов)' });
     }
-    
-    // BUG #15 (Critical): XSS уязвимость!
-    // Текст НЕ экранируется, можно вставить:
-    // <script>alert('XSS')</script>
-    // <img src=x onerror="alert('XSS')">
-    // Правильно было бы:
-    // const sanitizedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
+
     const user = DATA.users.find(u => u.id === req.user.id);
-    
+
     const review = {
         id: DATA.nextReviewId++,
-        product_id: parseInt(productId),
+        product_id: parsedProductId,
         user_id: req.user.id,
         user_name: user.name,
-        rating: parseInt(rating),
-        text: text.trim(), // НЕ экранируем — это баг!
+        rating: parsedRating,
+        text: normalizedText,
         status: 'pending',
         created_at: new Date().toISOString()
     };
-    
+
     DATA.reviews.push(review);
     if (!persistOr500(res)) return;
-    
-    res.json({ 
+
+    res.json({
         message: 'Отзыв отправлен на модерацию',
-        review: { 
-            id: review.id, 
+        review: {
+            id: review.id,
             status: review.status,
             created_at: review.created_at
         }
     });
 });
 
-// Получить мои отзывы
 app.get('/api/reviews/my', auth, (req, res) => {
     const reviews = DATA.reviews
         .filter(r => r.user_id === req.user.id)
