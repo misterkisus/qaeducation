@@ -93,7 +93,7 @@
                 
                 <div class="form-group">
                     <label for="promo-discount">Размер скидки *</label>
-                    <input type="number" id="promo-discount" min="0" step="0.01" required placeholder="Например: 10">
+                    <input type="number" id="promo-discount" min="0.01" max="100" step="0.01" required placeholder="Например: 10 (до 100%)">
                 </div>
                 
                 <div class="form-group">
@@ -130,6 +130,14 @@
     <script src="/js/app.js"></script>
     <script>
         let editingId = null;
+        const promoTypeInput = document.getElementById('promo-type');
+        const promoDiscountInput = document.getElementById('promo-discount');
+
+        function syncDiscountConstraints() {
+            const isPercent = promoTypeInput.value === 'percent';
+            promoDiscountInput.max = isPercent ? '100' : '';
+            promoDiscountInput.placeholder = isPercent ? 'Например: 10 (до 100%)' : 'Например: 500';
+        }
 
         async function loadPromocodes() {
             try {
@@ -231,6 +239,7 @@
             document.getElementById('promo-max-uses').value = promo?.max_uses || 100;
             document.getElementById('promo-expires').value = promo?.expires_at?.split('T')[0] || '';
             document.getElementById('promo-active').checked = promo ? promo.active === 1 : true;
+            syncDiscountConstraints();
             
             document.getElementById('promo-modal').classList.add('active');
         }
@@ -239,6 +248,7 @@
             document.getElementById('promo-modal').classList.remove('active');
             document.getElementById('promo-form').reset();
             document.getElementById('promo-code').disabled = false;
+            syncDiscountConstraints();
             editingId = null;
         }
 
@@ -273,11 +283,24 @@
 
         document.getElementById('promo-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            const selectedType = promoTypeInput.value;
+            const discountValue = parseFloat(promoDiscountInput.value);
+
+            if (!Number.isFinite(discountValue) || discountValue <= 0) {
+                showToast('Укажите корректный размер скидки', 'error');
+                return;
+            }
+
+            if (selectedType === 'percent' && discountValue > 100) {
+                showToast('Процент скидки не может быть больше 100', 'error');
+                return;
+            }
             
             const data = {
                 code: document.getElementById('promo-code').value.trim(),
-                type: document.getElementById('promo-type').value,
-                discount: parseFloat(document.getElementById('promo-discount').value),
+                type: selectedType,
+                discount: discountValue,
                 min_order: parseFloat(document.getElementById('promo-min-order').value) || 0,
                 max_uses: parseInt(document.getElementById('promo-max-uses').value) || 100,
                 expires_at: document.getElementById('promo-expires').value || '2025-12-31',
@@ -303,6 +326,8 @@
             }
         });
 
+        promoTypeInput.addEventListener('change', syncDiscountConstraints);
+
         async function deletePromo(id) {
             if (!confirm('Удалить промокод? Это действие нельзя отменить.')) return;
             
@@ -322,6 +347,7 @@
 
         // Init
         checkAuth();
+        syncDiscountConstraints();
         loadPromocodes();
     </script>
 </body>

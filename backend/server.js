@@ -330,6 +330,42 @@ function getUserReviewForProduct(userId, productId) {
     );
 }
 
+function isPromocodeExpired(expiresAt) {
+    if (!expiresAt) return false;
+    const dateOnly = String(expiresAt).split('T')[0];
+    const parts = dateOnly.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return false;
+    const [year, month, day] = parts;
+    const expiresAtEndOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+    return Date.now() > expiresAtEndOfDay.getTime();
+}
+
+function hasUserUsedPromocode(userId, promoCode) {
+    if (!promoCode) return false;
+    const normalizedCode = String(promoCode).trim().toUpperCase();
+    return DATA.orders.some(
+        order => order.user_id === userId && String(order.promocode || '').trim().toUpperCase() === normalizedCode
+    );
+}
+
+function normalizePromocodeType(type) {
+    return type === 'fixed' ? 'fixed' : 'percent';
+}
+
+function parsePromocodeDiscount(discount, type) {
+    const parsedDiscount = parseFloat(discount);
+
+    if (!Number.isFinite(parsedDiscount) || parsedDiscount <= 0) {
+        return { error: 'Укажите корректный размер скидки' };
+    }
+
+    if (type === 'percent' && parsedDiscount > 100) {
+        return { error: 'Процент скидки не может быть больше 100' };
+    }
+
+    return { value: parsedDiscount };
+}
+
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
@@ -483,6 +519,88 @@ app.delete('/api/cart/:id', auth, (req, res) => {
     DATA.cart = DATA.cart.filter(c => !(c.id === parseInt(req.params.id) && c.user_id === req.user.id));
     if (!persistOr500(res)) return;
     res.json({ message: 'Товар удалён' });
+});
+
+// ============ PROMOCODES ROUTES ============
+app.post('/api/promocodes/apply', auth, (req, res) => {
+    const { code } = req.body;
+    const normalizedCode = typeof code === 'string' ? code.trim().toUpperCase() : '';
+
+    if (!normalizedCode) {
+        return res.status(400).json({ error: 'Введите промокод' });
+    }
+
+    const promo = DATA.promocodes.find(p => String(p.code || '').toUpperCase() === normalizedCode);
+
+    if (!promo) {
+        return res.status(400).json({ error: 'Промокод не найден' });
+    }
+
+    if (!promo.active) {
+        return res.status(400).json({ error: 'Промокод неактивен' });
+    }
+
+    if (isPromocodeExpired(promo.expires_at)) {
+        return res.status(400).json({ error: 'Промокод больше не действует' });
+    }
+
+    if (hasUserUsedPromocode(req.user.id, promo.code)) {
+        return res.status(400).json({ error: 'Вы уже использовали этот промокод' });
+    }
+
+    if (promo.used_count >= promo.max_uses) {
+        return res.status(400).json({ error: 'Лимит использования промокода исчерпан' });
+    }
+
+    const cartItems = DATA.cart.filter(c => c.user_id === req.user.id);
+    const cartTotal = cartItems.reduce((sum, c) => {
+        const p = DATA.products.find(pr => pr.id === c.product_id);
+        return sum + (p ? p.price * c.quantity : 0);
+    }, 0);
+
+    if (cartTotal < promo.min_order) {
+        return res.status(400).json({
+            error: `Минимальная сумма заказа для этого промокода: ${promo.min_order} ₽`
+        });
+    }
+
+    let discount = 0;
+    if (promo.type === 'percent') {
+        discount = cartTotal * (promo.discount / 100);
+    } else {
+        discount = Math.min(promo.discount, cartTotal);
+    }
+
+    const minPayableTotal = cartTotal > 0 ? 1 : 0;
+    const maxAllowedDiscount = Math.max(0, cartTotal - minPayableTotal);
+    discount = Math.min(discount, maxAllowedDiscount);
+    const newTotal = Math.max(minPayableTotal, cartTotal - discount);
+
+    res.json({
+        message: 'Промокод применён',
+        code: promo.code,
+        discount: Math.round(discount * 100) / 100,
+        discountPercent: promo.type === 'percent' ? promo.discount : null,
+        discountType: promo.type,
+        originalTotal: Math.round(cartTotal * 100) / 100,
+        newTotal: Math.round(newTotal * 100) / 100
+    });
+});
+
+app.get('/api/promocodes/check/:code', (req, res) => {
+    const promo = DATA.promocodes.find(
+        p => p.code.toUpperCase() === req.params.code.toUpperCase() && p.active && !isPromocodeExpired(p.expires_at)
+    );
+    if (!promo) {
+        return res.status(404).json({ error: 'Промокод не найден' });
+    }
+    res.json({
+        code: promo.code,
+        discount: promo.discount,
+        type: promo.type,
+        min_order: promo.min_order,
+        expires_at: promo.expires_at
+    });
 });
 
 // ============ REVIEWS ROUTES ============
@@ -724,19 +842,31 @@ app.post('/api/orders/checkout', auth, (req, res) => {
         const p = DATA.products.find(pr => pr.id === c.product_id);
         return sum + p.price * c.quantity;
     }, 0);
+    const minPayableTotal = total > 0 ? 1 : 0;
     
     let discountAmount = 0;
     let appliedPromo = null;
     
     if (normalizedPromocode) {
-        const promo = DATA.promocodes.find(p => p.code === normalizedPromocode && p.active);
+        const promoCode = normalizedPromocode.toUpperCase();
+        const promo = DATA.promocodes.find(
+            p => String(p.code || '').toUpperCase() === promoCode && p.active
+        );
+        if (promo && isPromocodeExpired(promo.expires_at)) {
+            return res.status(400).json({ error: 'Промокод больше не действует' });
+        }
+        if (promo && hasUserUsedPromocode(req.user.id, promo.code)) {
+            return res.status(400).json({ error: 'Вы уже использовали этот промокод' });
+        }
         if (promo && total >= promo.min_order) {
             if (promo.type === 'percent') {
                 discountAmount = total * (promo.discount / 100);
             } else {
                 discountAmount = Math.min(promo.discount, total);
             }
-            total = Math.max(0, total - discountAmount);
+            const maxAllowedDiscount = Math.max(0, total - minPayableTotal);
+            discountAmount = Math.min(discountAmount, maxAllowedDiscount);
+            total = Math.max(minPayableTotal, total - discountAmount);
             promo.used_count++;
             appliedPromo = promo.code;
         }
@@ -896,6 +1026,85 @@ app.put('/api/admin/orders/:id/status', auth, adminOnly, (req, res) => {
     order.status = status;
     if (!persistOr500(res)) return;
     res.json({ message: 'Статус заказа обновлён' });
+});
+
+app.get('/api/admin/promocodes', auth, adminOnly, (req, res) => {
+    res.json(DATA.promocodes);
+});
+
+app.post('/api/admin/promocodes', auth, adminOnly, (req, res) => {
+    const { code, discount, type, min_order, max_uses, expires_at } = req.body;
+    const normalizedType = normalizePromocodeType(type);
+
+    if (!code || code.trim().length < 3) {
+        return res.status(400).json({ error: 'Код должен содержать минимум 3 символа' });
+    }
+
+    if (DATA.promocodes.find(p => p.code.toUpperCase() === code.toUpperCase())) {
+        return res.status(400).json({ error: 'Промокод уже существует' });
+    }
+
+    const validatedDiscount = parsePromocodeDiscount(discount, normalizedType);
+    if (validatedDiscount.error) {
+        return res.status(400).json({ error: validatedDiscount.error });
+    }
+
+    const promo = {
+        id: DATA.nextPromocodeId++,
+        code: code.trim().toUpperCase(),
+        discount: validatedDiscount.value,
+        type: normalizedType,
+        min_order: parseFloat(min_order) || 0,
+        max_uses: parseInt(max_uses) || 100,
+        used_count: 0,
+        expires_at: expires_at || '2025-12-31',
+        active: 1,
+        created_at: new Date().toISOString()
+    };
+
+    DATA.promocodes.push(promo);
+    if (!persistOr500(res)) return;
+    res.json({ id: promo.id, message: 'Промокод создан' });
+});
+
+app.put('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
+    const promo = DATA.promocodes.find(p => p.id === parseInt(req.params.id));
+    if (!promo) return res.status(404).json({ error: 'Промокод не найден' });
+
+    const { discount, type, min_order, max_uses, expires_at, active } = req.body;
+    const nextType = type !== undefined ? normalizePromocodeType(type) : promo.type;
+
+    if (discount !== undefined) {
+        const validatedDiscount = parsePromocodeDiscount(discount, nextType);
+        if (validatedDiscount.error) {
+            return res.status(400).json({ error: validatedDiscount.error });
+        }
+        promo.discount = validatedDiscount.value;
+    }
+
+    if (type !== undefined) {
+        if (nextType === 'percent' && promo.discount > 100) {
+            return res.status(400).json({ error: 'Процент скидки не может быть больше 100' });
+        }
+        promo.type = nextType;
+    }
+
+    if (min_order !== undefined) promo.min_order = parseFloat(min_order);
+    if (max_uses !== undefined) promo.max_uses = parseInt(max_uses);
+    if (expires_at !== undefined) promo.expires_at = expires_at;
+    if (active !== undefined) promo.active = active ? 1 : 0;
+    if (!persistOr500(res)) return;
+
+    res.json({ message: 'Промокод обновлён' });
+});
+
+app.delete('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
+    const index = DATA.promocodes.findIndex(p => p.id === parseInt(req.params.id));
+    if (index === -1) return res.status(404).json({ error: 'Промокод не найден' });
+
+    DATA.promocodes.splice(index, 1);
+    if (!persistOr500(res)) return;
+    res.json({ message: 'Промокод удалён' });
 });
 
 // Admin Reviews
