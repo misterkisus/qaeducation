@@ -289,10 +289,10 @@ function getProductReviewStats(productId) {
     };
 }
 
-function hasUserPurchasedProduct(userId, productId) {
+function hasUserDeliveredOrderForProduct(userId, productId) {
     const userOrderIds = new Set(
         DATA.orders
-            .filter(order => order.user_id === userId && order.status !== 'cancelled')
+            .filter(order => order.user_id === userId && order.status === 'delivered')
             .map(order => order.id)
     );
 
@@ -466,21 +466,44 @@ app.delete('/api/cart/:id', auth, (req, res) => {
 
 // Получить отзывы для товара
 app.get('/api/reviews/product/:id', (req, res) => {
-    const productId = parseInt(req.params.id);
+    const productId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(productId) || productId <= 0) {
+        return res.status(400).json({ error: 'Invalid product id' });
+    }
 
-    const reviews = DATA.reviews
-        .filter(r => r.product_id === productId && r.status === 'approved')
+    let requesterId = null;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            requesterId = decoded?.id || null;
+        } catch (e) {
+            requesterId = null;
+        }
+    }
+
+    const approvedReviews = DATA.reviews.filter(
+        r => r.product_id === productId && r.status === 'approved'
+    );
+
+    const requesterPendingReviews = requesterId
+        ? DATA.reviews.filter(
+            r =>
+                r.product_id === productId &&
+                r.user_id === requesterId &&
+                r.status === 'pending'
+        )
+        : [];
+
+    const reviews = [...approvedReviews, ...requesterPendingReviews]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
-    // Статистика считается только по одобренным
-    const approvedReviews = reviews;
-    
+
     const stats = {
         total: approvedReviews.length,
         average: 0,
         distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
     };
-    
+
     if (approvedReviews.length > 0) {
         stats.average = Math.round((approvedReviews.reduce((s, r) => s + r.rating, 0) / approvedReviews.length) * 10) / 10;
         approvedReviews.forEach(r => {
@@ -489,11 +512,10 @@ app.get('/api/reviews/product/:id', (req, res) => {
             }
         });
     }
-    
+
     res.json({ reviews, stats });
 });
 
-// Проверить, может ли пользователь оставить отзыв
 app.get('/api/reviews/eligibility/:id', auth, (req, res) => {
     const productId = parseInt(req.params.id, 10);
     if (!Number.isInteger(productId) || productId <= 0) {
@@ -505,14 +527,15 @@ app.get('/api/reviews/eligibility/:id', auth, (req, res) => {
         return res.status(404).json({ error: 'Товар не найден' });
     }
 
-    const hasPurchased = hasUserPurchasedProduct(req.user.id, productId);
+    const hasDelivered = hasUserDeliveredOrderForProduct(req.user.id, productId);
     const existingReview = getUserReviewForProduct(req.user.id, productId);
 
     res.json({
         productId,
-        hasPurchased,
+        hasDelivered,
+        hasPurchased: hasDelivered,
         alreadyReviewed: Boolean(existingReview),
-        canReview: hasPurchased && !existingReview,
+        canReview: hasDelivered && !existingReview,
         existingReview: existingReview
             ? {
                 id: existingReview.id,
@@ -539,8 +562,8 @@ app.post('/api/reviews', auth, (req, res) => {
         return res.status(404).json({ error: 'Товар не найден' });
     }
 
-    if (!hasUserPurchasedProduct(req.user.id, parsedProductId)) {
-        return res.status(400).json({ error: 'Вы можете оставить отзыв только на купленный товар' });
+    if (!hasUserDeliveredOrderForProduct(req.user.id, parsedProductId)) {
+        return res.status(400).json({ error: 'Review allowed only after order is delivered' });
     }
 
     if (getUserReviewForProduct(req.user.id, parsedProductId)) {

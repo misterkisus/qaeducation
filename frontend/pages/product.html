@@ -441,10 +441,10 @@
                     return;
                 }
 
-                if (!eligibility.hasPurchased) {
+                if (!eligibility.hasDelivered) {
                     container.innerHTML = `
                         <div class="login-prompt">
-                            <p><i class="fas fa-lock"></i> Оценка и отзыв доступны только после покупки этого товара.</p>
+                            <p><i class="fas fa-lock"></i> Rating and review are available only after the order is delivered.</p>
                         </div>
                     `;
                     return;
@@ -586,7 +586,7 @@
         // ============ LOAD REVIEWS ============
         async function loadReviews(productId) {
             try {
-                const res = await fetch(`${API_URL}/reviews/product/${productId}`);
+                const res = await apiRequest(`/reviews/product/${productId}`, { method: 'GET' });
                 const data = await res.json();
                 
                 // Отображаем статистику
@@ -660,6 +660,9 @@
                     month: 'long',
                     year: 'numeric'
                 });
+                const moderationBadge = r.status === 'pending'
+                    ? '<span class="review-status pending">На модерации</span>'
+                    : '';
                 
                 return `
                     <div class="review-item">
@@ -667,6 +670,7 @@
                             <span class="review-author">
                                 <span class="avatar">${initial}</span>
                                 ${r.user_name}
+                                ${moderationBadge}
                             </span>
                             <span class="review-date">${date}</span>
                         </div>
