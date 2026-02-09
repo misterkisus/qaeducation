@@ -108,7 +108,7 @@
                 
                 <div class="form-group">
                     <label for="promo-expires">Действует до</label>
-                    <input type="date" id="promo-expires">
+                    <input type="date" id="promo-expires" required min="1900-01-01" max="9999-12-31">
                 </div>
                 
                 <div class="form-group">
@@ -132,11 +132,46 @@
         let editingId = null;
         const promoTypeInput = document.getElementById('promo-type');
         const promoDiscountInput = document.getElementById('promo-discount');
+        const promoExpiresInput = document.getElementById('promo-expires');
 
         function syncDiscountConstraints() {
             const isPercent = promoTypeInput.value === 'percent';
             promoDiscountInput.max = isPercent ? '100' : '';
             promoDiscountInput.placeholder = isPercent ? 'Например: 10 (до 100%)' : 'Например: 500';
+        }
+
+        function parseIsoDateStrict(dateString) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                return null;
+            }
+
+            const [year, month, day] = dateString.split('-').map(Number);
+            const date = new Date(Date.UTC(year, month - 1, day));
+            if (
+                date.getUTCFullYear() !== year ||
+                date.getUTCMonth() !== month - 1 ||
+                date.getUTCDate() !== day
+            ) {
+                return null;
+            }
+
+            return dateString;
+        }
+
+        function validatePromoExpireDate(showError = false) {
+            const rawValue = promoExpiresInput.value.trim();
+            const parsedValue = parseIsoDateStrict(rawValue);
+
+            if (!parsedValue) {
+                promoExpiresInput.setCustomValidity('Введите корректную дату');
+                if (showError) {
+                    showToast('Укажите корректную дату окончания промокода', 'error');
+                }
+                return null;
+            }
+
+            promoExpiresInput.setCustomValidity('');
+            return parsedValue;
         }
 
         async function loadPromocodes() {
@@ -240,6 +275,7 @@
             document.getElementById('promo-expires').value = promo?.expires_at?.split('T')[0] || '';
             document.getElementById('promo-active').checked = promo ? promo.active === 1 : true;
             syncDiscountConstraints();
+            validatePromoExpireDate();
             
             document.getElementById('promo-modal').classList.add('active');
         }
@@ -296,6 +332,13 @@
                 showToast('Процент скидки не может быть больше 100', 'error');
                 return;
             }
+
+            const validatedExpiresAt = validatePromoExpireDate(true);
+            if (!validatedExpiresAt) {
+                promoExpiresInput.reportValidity();
+                promoExpiresInput.focus();
+                return;
+            }
             
             const data = {
                 code: document.getElementById('promo-code').value.trim(),
@@ -303,7 +346,7 @@
                 discount: discountValue,
                 min_order: parseFloat(document.getElementById('promo-min-order').value) || 0,
                 max_uses: parseInt(document.getElementById('promo-max-uses').value) || 100,
-                expires_at: document.getElementById('promo-expires').value || '2025-12-31',
+                expires_at: validatedExpiresAt,
                 active: document.getElementById('promo-active').checked ? 1 : 0
             };
             
@@ -327,6 +370,7 @@
         });
 
         promoTypeInput.addEventListener('change', syncDiscountConstraints);
+        promoExpiresInput.addEventListener('input', () => validatePromoExpireDate());
 
         async function deletePromo(id) {
             if (!confirm('Удалить промокод? Это действие нельзя отменить.')) return;

@@ -366,6 +366,35 @@ function parsePromocodeDiscount(discount, type) {
     return { value: parsedDiscount };
 }
 
+function parsePromocodeExpiryDate(expiresAt, options = {}) {
+    const { required = false } = options;
+    const rawValue = expiresAt === undefined || expiresAt === null ? '' : String(expiresAt).trim();
+
+    if (!rawValue) {
+        if (required) {
+            return { error: 'Укажите дату окончания действия промокода' };
+        }
+        return { value: null };
+    }
+
+    const dateOnly = rawValue.split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+        return { error: 'Укажите корректную дату в формате YYYY-MM-DD' };
+    }
+
+    const [year, month, day] = dateOnly.split('-').map(Number);
+    const parsedDate = new Date(Date.UTC(year, month - 1, day));
+    const isInvalidDate =
+        parsedDate.getUTCFullYear() !== year ||
+        parsedDate.getUTCMonth() !== month - 1 ||
+        parsedDate.getUTCDate() !== day;
+
+    if (isInvalidDate) {
+        return { error: 'Укажите корректную дату окончания действия промокода' };
+    }
+
+    return { value: dateOnly };
+}
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
@@ -1049,6 +1078,11 @@ app.post('/api/admin/promocodes', auth, adminOnly, (req, res) => {
         return res.status(400).json({ error: validatedDiscount.error });
     }
 
+    const validatedExpiresAt = parsePromocodeExpiryDate(expires_at, { required: true });
+    if (validatedExpiresAt.error) {
+        return res.status(400).json({ error: validatedExpiresAt.error });
+    }
+
     const promo = {
         id: DATA.nextPromocodeId++,
         code: code.trim().toUpperCase(),
@@ -1057,7 +1091,7 @@ app.post('/api/admin/promocodes', auth, adminOnly, (req, res) => {
         min_order: parseFloat(min_order) || 0,
         max_uses: parseInt(max_uses) || 100,
         used_count: 0,
-        expires_at: expires_at || '2025-12-31',
+        expires_at: validatedExpiresAt.value,
         active: 1,
         created_at: new Date().toISOString()
     };
@@ -1091,7 +1125,13 @@ app.put('/api/admin/promocodes/:id', auth, adminOnly, (req, res) => {
 
     if (min_order !== undefined) promo.min_order = parseFloat(min_order);
     if (max_uses !== undefined) promo.max_uses = parseInt(max_uses);
-    if (expires_at !== undefined) promo.expires_at = expires_at;
+    if (expires_at !== undefined) {
+        const validatedExpiresAt = parsePromocodeExpiryDate(expires_at, { required: true });
+        if (validatedExpiresAt.error) {
+            return res.status(400).json({ error: validatedExpiresAt.error });
+        }
+        promo.expires_at = validatedExpiresAt.value;
+    }
     if (active !== undefined) promo.active = active ? 1 : 0;
     if (!persistOr500(res)) return;
 
