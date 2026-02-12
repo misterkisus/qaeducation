@@ -16,6 +16,9 @@
             border-radius: var(--radius);
             box-shadow: var(--shadow);
         }
+        .product-image-wrap {
+            position: relative;
+        }
         .product-page-image {
             width: 100%;
             height: 400px;
@@ -58,6 +61,33 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             font-size: 1.1rem;
+        }
+        .wishlist-toggle-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s ease;
+        }
+        .wishlist-toggle-btn:hover {
+            transform: scale(1.05);
+        }
+        .wishlist-toggle-btn i {
+            color: #e74c3c;
+            font-size: 1.1rem;
+        }
+        .wishlist-toggle-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
         
         /* Reviews Section */
@@ -318,6 +348,8 @@
     <script>
         let currentProduct = null;
         let selectedRating = 0;
+        let isCurrentProductInWishlist = false;
+        let wishlistTogglePending = false;
 
         // ============ LOAD PRODUCT ============
         async function loadProduct() {
@@ -349,9 +381,12 @@
                 }
                 
                 container.innerHTML = `
-                    <div>
+                    <div class="product-image-wrap">
                         <img src="${currentProduct.image}" alt="${currentProduct.name}" class="product-page-image" 
                              onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+                        <button class="wishlist-toggle-btn" id="wishlist-toggle-btn" onclick="toggleProductWishlist()" aria-label="Избранное" title="Добавить в избранное">
+                            <i class="far fa-heart"></i>
+                        </button>
                     </div>
                     <div>
                         <h1 class="product-page-title">${currentProduct.name}</h1>
@@ -393,6 +428,7 @@
                 // Загружаем отзывы и форму
                 await loadReviewForm();
                 loadReviews(productId);
+                syncProductWishlistState();
                 
             } catch (e) {
                 console.error('Error loading product:', e);
@@ -716,7 +752,8 @@
                 return;
             }
             
-            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const quantityInput = document.getElementById('quantity');
+            const quantity = quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
             
             try {
                 const res = await apiRequest('/cart/add', {
@@ -733,6 +770,112 @@
                 }
             } catch (e) {
                 showToast('Ошибка соединения', 'error');
+            }
+        }
+
+        function updateProductWishlistButton() {
+            const btn = document.getElementById('wishlist-toggle-btn');
+            if (!btn) return;
+
+            const icon = btn.querySelector('i');
+            if (!icon) return;
+
+            if (isCurrentProductInWishlist) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                btn.title = 'Удалить из избранного';
+                btn.setAttribute('aria-label', 'Удалить из избранного');
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                btn.title = 'Добавить в избранное';
+                btn.setAttribute('aria-label', 'Добавить в избранное');
+            }
+        }
+
+        async function syncProductWishlistState() {
+            if (!currentProduct) return;
+
+            isCurrentProductInWishlist = false;
+
+            if (!authToken) {
+                updateProductWishlistButton();
+                return;
+            }
+
+            try {
+                const res = await apiRequest(`/wishlist/check/${currentProduct.id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    isCurrentProductInWishlist = Boolean(data.inWishlist);
+                }
+            } catch (e) {
+                console.error('Failed to sync wishlist state:', e);
+            }
+
+            updateProductWishlistButton();
+        }
+
+        function isAlreadyInWishlistError(message) {
+            if (typeof message !== 'string') return false;
+            const normalized = message.toLowerCase();
+            return normalized.includes('уже') || normalized.includes('already');
+        }
+
+        async function toggleProductWishlist() {
+            if (!currentProduct || wishlistTogglePending) return;
+
+            if (!authToken) {
+                showToast('Войдите, чтобы добавить в избранное', 'warning');
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            const btn = document.getElementById('wishlist-toggle-btn');
+            wishlistTogglePending = true;
+            if (btn) btn.disabled = true;
+
+            try {
+                if (isCurrentProductInWishlist) {
+                    const res = await apiRequest(`/wishlist/product/${currentProduct.id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        isCurrentProductInWishlist = false;
+                        updateProductWishlistButton();
+                        if (typeof updateWishlistCount === 'function') updateWishlistCount();
+                        showToast('Удалено из избранного', 'success');
+                    } else {
+                        const data = await res.json().catch(() => ({}));
+                        showToast(data.error || 'Ошибка', 'error');
+                    }
+                } else {
+                    const res = await apiRequest('/wishlist/add', {
+                        method: 'POST',
+                        body: JSON.stringify({ productId: currentProduct.id })
+                    });
+
+                    if (res.ok) {
+                        isCurrentProductInWishlist = true;
+                        updateProductWishlistButton();
+                        if (typeof updateWishlistCount === 'function') updateWishlistCount();
+                        showToast('Добавлено в избранное', 'success');
+                    } else {
+                        const data = await res.json().catch(() => ({}));
+                        const message = data.error || 'Ошибка';
+
+                        if (res.status === 400 || isAlreadyInWishlistError(message)) {
+                            isCurrentProductInWishlist = true;
+                            updateProductWishlistButton();
+                            if (typeof updateWishlistCount === 'function') updateWishlistCount();
+                        }
+
+                        showToast(message, 'error');
+                    }
+                }
+            } catch (e) {
+                showToast('Ошибка соединения', 'error');
+            } finally {
+                wishlistTogglePending = false;
+                if (btn) btn.disabled = false;
             }
         }
 
