@@ -1,50 +1,99 @@
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('products-grid')) { 
-        loadProducts(); 
-        loadCategories(); 
-        setupFilters(); 
+let wishlistProductIds = new Set();
+let isWishlistStateLoaded = false;
+let wishlistStatePromise = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    if (document.getElementById('products-grid')) {
+        await ensureWishlistStateLoaded();
+        loadProducts();
+        loadCategories();
+        setupFilters();
+        if (typeof updateWishlistCount === 'function') {
+            updateWishlistCount();
+        }
     }
 });
+
+async function ensureWishlistStateLoaded(force = false) {
+    if (!authToken) {
+        wishlistProductIds = new Set();
+        isWishlistStateLoaded = true;
+        return;
+    }
+
+    if (isWishlistStateLoaded && !force) {
+        return;
+    }
+
+    if (wishlistStatePromise && !force) {
+        await wishlistStatePromise;
+        return;
+    }
+
+    wishlistStatePromise = (async () => {
+        try {
+            const res = await apiRequest('/wishlist');
+            if (!res.ok) {
+                wishlistProductIds = new Set();
+                return;
+            }
+
+            const data = await res.json();
+            wishlistProductIds = new Set(
+                (data.items || []).map((item) => Number(item.product_id))
+            );
+        } catch (e) {
+            console.error('Failed to preload wishlist state:', e);
+            wishlistProductIds = new Set();
+        } finally {
+            isWishlistStateLoaded = true;
+            wishlistStatePromise = null;
+        }
+    })();
+
+    await wishlistStatePromise;
+}
 
 async function loadProducts(params = {}) {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
-    
+
     grid.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Загрузка...</p></div>';
-    
+
     try {
+        await ensureWishlistStateLoaded();
+
         let url = `${API_URL}/products`;
         const qp = new URLSearchParams();
-        
+
         if (params.category) qp.append('category', params.category);
         if (params.search) qp.append('search', params.search);
         if (params.sort) qp.append('sort', params.sort);
         if (qp.toString()) url += `?${qp.toString()}`;
-        
-        console.log('Fetching products from:', url); // Для отладки
-        
+
+        console.log('Fetching products from:', url);
+
         const res = await fetch(url);
-        
+
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
         }
-        
+
         const products = await res.json();
-        
-        if (!products.length) { 
+
+        if (!products.length) {
             grid.innerHTML = `
                 <div class="empty-state" style="grid-column: 1/-1;">
                     <i class="fas fa-box-open"></i>
                     <h3>Товары не найдены</h3>
                     <p>Попробуйте изменить параметры поиска</p>
                 </div>
-            `; 
-            return; 
+            `;
+            return;
         }
-        
-        grid.innerHTML = products.map(p => createProductCard(p)).join('');
-        
-    } catch (e) { 
+
+        grid.innerHTML = products.map((p) => createProductCard(p)).join('');
+    } catch (e) {
         console.error('Failed to load products:', e);
         grid.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
@@ -53,13 +102,15 @@ async function loadProducts(params = {}) {
                 <p>Не удалось загрузить товары. Попробуйте обновить страницу.</p>
                 <button class="btn btn-primary" onclick="loadProducts()">Повторить</button>
             </div>
-        `; 
+        `;
     }
 }
 
 function createProductCard(p) {
     const stockClass = p.stock === 0 ? 'out' : p.stock < 10 ? 'low' : '';
     const stockText = p.stock === 0 ? 'Нет в наличии' : p.stock < 10 ? `Осталось: ${p.stock}` : 'В наличии';
+    const isInWishlist = wishlistProductIds.has(Number(p.id));
+
     const actionButton = p.stock === 0
         ? `<button class="btn btn-out-of-stock btn-sm" disabled>
                     <i class="fas fa-ban"></i> Нет в наличии
@@ -67,17 +118,17 @@ function createProductCard(p) {
         : `<button class="btn btn-primary btn-sm" onclick="addToCart(${p.id})">
                     <i class="fas fa-cart-plus"></i> В корзину
                 </button>`;
-    
+
     return `<div class="product-card">
         <div style="position: relative;">
             <img src="${getProductImageUrl(p.image)}" alt="${p.name}" class="product-image" 
                  onerror="handleProductImageError(this)">
             <button class="wishlist-btn" onclick="event.preventDefault(); toggleWishlist(${p.id}, this)" 
-                    title="Добавить в избранное"
+                    title="${isInWishlist ? 'Удалить из избранного' : 'Добавить в избранное'}"
                     style="position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; 
                            border-radius: 50%; border: none; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
                            cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                <i class="far fa-heart" style="color: #e74c3c; font-size: 1.1rem;"></i>
+                <i class="${isInWishlist ? 'fas' : 'far'} fa-heart" style="color: #e74c3c; font-size: 1.1rem;"></i>
             </button>
         </div>
         <div class="product-info">
@@ -98,16 +149,16 @@ function createProductCard(p) {
 async function loadCategories() {
     const select = document.getElementById('category-filter');
     if (!select) return;
-    
+
     try {
         const res = await fetch(`${API_URL}/products/meta/categories`);
         const cats = await res.json();
-        
-        cats.forEach(c => { 
-            const opt = document.createElement('option'); 
-            opt.value = c; 
-            opt.textContent = c; 
-            select.appendChild(opt); 
+
+        cats.forEach((c) => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            select.appendChild(opt);
         });
     } catch (e) {
         console.error('Failed to load categories:', e);
@@ -119,11 +170,11 @@ function setupFilters() {
     const cat = document.getElementById('category-filter');
     const sort = document.getElementById('sort-filter');
     let timeout;
-    
+
     if (search) {
-        search.addEventListener('input', () => { 
-            clearTimeout(timeout); 
-            timeout = setTimeout(applyFilters, 300); 
+        search.addEventListener('input', () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(applyFilters, 300);
         });
     }
     if (cat) cat.addEventListener('change', applyFilters);
@@ -138,71 +189,110 @@ function applyFilters() {
     });
 }
 
-// BUG #7: Нет защиты от двойного клика
 async function addToCart(productId) {
-    if (!authToken) { 
-        showToast('Войдите для добавления в корзину', 'warning'); 
-        window.location.href = '/pages/login.html'; 
-        return; 
+    if (!authToken) {
+        showToast('Войдите для добавления в корзину', 'warning');
+        window.location.href = '/pages/login.html';
+        return;
     }
-    
+
     try {
-        const res = await apiRequest('/cart/add', { 
-            method: 'POST', 
-            body: JSON.stringify({ productId, quantity: 1 }) 
+        const res = await apiRequest('/cart/add', {
+            method: 'POST',
+            body: JSON.stringify({ productId, quantity: 1 })
         });
-        
-        if (res.ok) { 
-            showToast('Товар добавлен в корзину', 'success'); 
-            updateCartCount(); 
-        } else { 
-            const d = await res.json(); 
-            showToast(d.error || 'Ошибка', 'error'); 
+
+        if (res.ok) {
+            showToast('Товар добавлен в корзину', 'success');
+            updateCartCount();
+        } else {
+            const d = await res.json();
+            showToast(d.error || 'Ошибка', 'error');
         }
-    } catch (e) { 
+    } catch (e) {
         console.error('Add to cart error:', e);
-        showToast('Ошибка соединения', 'error'); 
+        showToast('Ошибка соединения', 'error');
     }
 }
 
-// BUG #16 & #18: Нет защиты от двойного клика и счётчик не обновляется автоматически
+function isAlreadyInWishlistError(message) {
+    return typeof message === 'string' && /уже/i.test(message);
+}
+
 async function toggleWishlist(productId, btn) {
     if (!authToken) {
         showToast('Войдите, чтобы добавить в избранное', 'warning');
         window.location.href = '/pages/login.html';
         return;
     }
-    
+
+    if (btn.dataset.loading === 'true') {
+        return;
+    }
+
     const icon = btn.querySelector('i');
+    if (!icon) {
+        return;
+    }
+
     const isInWishlist = icon.classList.contains('fas');
-    
+
+    btn.dataset.loading = 'true';
+    btn.disabled = true;
+
     try {
         if (isInWishlist) {
-            // Удаляем из избранного
             const res = await apiRequest(`/wishlist/product/${productId}`, { method: 'DELETE' });
             if (res.ok) {
                 icon.classList.remove('fas');
                 icon.classList.add('far');
+                btn.title = 'Добавить в избранное';
+                wishlistProductIds.delete(Number(productId));
                 showToast('Удалено из избранного', 'success');
+                if (typeof updateWishlistCount === 'function') {
+                    updateWishlistCount();
+                }
+            } else {
+                const data = await res.json().catch(() => ({}));
+                showToast(data.error || 'Ошибка', 'error');
             }
         } else {
-            // Добавляем в избранное (БАГ: нет защиты от двойного клика)
             const res = await apiRequest('/wishlist/add', {
                 method: 'POST',
                 body: JSON.stringify({ productId })
             });
+
             if (res.ok) {
                 icon.classList.remove('far');
                 icon.classList.add('fas');
+                btn.title = 'Удалить из избранного';
+                wishlistProductIds.add(Number(productId));
                 showToast('Добавлено в избранное', 'success');
+                if (typeof updateWishlistCount === 'function') {
+                    updateWishlistCount();
+                }
             } else {
-                const data = await res.json();
-                showToast(data.error || 'Ошибка', 'error');
+                const data = await res.json().catch(() => ({}));
+                const message = data.error || 'Ошибка';
+
+                if (res.status === 400 && isAlreadyInWishlistError(message)) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    btn.title = 'Удалить из избранного';
+                    wishlistProductIds.add(Number(productId));
+                    if (typeof updateWishlistCount === 'function') {
+                        updateWishlistCount();
+                    }
+                }
+
+                showToast(message, 'error');
             }
         }
-        // BUG #18: Счётчик в шапке не обновляется!
-        // Правильно было бы: updateWishlistCount();
     } catch (e) {
+        console.error('Wishlist toggle error:', e);
         showToast('Ошибка соединения', 'error');
+    } finally {
+        btn.dataset.loading = 'false';
+        btn.disabled = false;
     }
 }
