@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модерация отзывов - Админ-панель</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .review-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid #ddd;
+            transition: border-color 0.3s;
+        }
+        .review-card.status-pending {
+            border-left-color: #ff9800;
+        }
+        .review-card.status-approved {
+            border-left-color: #4caf50;
+        }
+        .review-card.status-rejected {
+            border-left-color: #f44336;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .review-product {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .review-product img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .review-product-info {}
+        .review-product-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .review-product-name.deleted {
+            color: #999;
+            text-decoration: line-through;
+        }
+        .review-meta {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .review-rating {
+            color: #ffc107;
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+            margin: 15px 0;
+        }
+        
+        .review-text {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .review-text.has-html {
+            border: 2px solid #f44336;
+            background: #fff5f5;
+        }
+        
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-badge.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 12px 24px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-tab:hover {
+            background: #dee2e6;
+        }
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        .filter-tab .count {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .warning-box i {
+            font-size: 1.3rem;
+            color: #856404;
+        }
+        
+        .xss-warning {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="/" class="logo"><i class="fas fa-shopping-bag"></i> TechShop</a>
+            <div class="auth-section" id="auth-section"></div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <nav class="admin-menu">
+                <a href="/pages/admin/dashboard.html"><i class="fas fa-chart-line"></i> Дашборд</a>
+                <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Товары</a>
+                <a href="/pages/admin/orders.html"><i class="fas fa-shopping-bag"></i> Заказы</a>
+                <a href="/pages/admin/reviews.html" class="active"><i class="fas fa-star"></i> Отзывы</a>
+                <a href="/"><i class="fas fa-store"></i> На сайт</a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            <div class="admin-header">
+                <h1><i class="fas fa-star" style="color: #ffc107;"></i> Модерация отзывов</h1>
+            </div>
+
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Внимание!</strong> Проверяйте отзывы на спам, оскорбления и вредоносный код (XSS) перед одобрением.
+                </div>
+            </div>
+
+            <div class="filter-tabs" id="filter-tabs">
+                <button class="filter-tab active" data-status="all">
+                    <i class="fas fa-list"></i> Все
+                    <span class="count" id="count-all">0</span>
+                </button>
+                <button class="filter-tab" data-status="pending">
+                    <i class="fas fa-clock"></i> Ожидают
+                    <span class="count" id="count-pending">0</span>
+                </button>
+                <button class="filter-tab" data-status="approved">
+                    <i class="fas fa-check"></i> Одобренные
+                    <span class="count" id="count-approved">0</span>
+                </button>
+                <button class="filter-tab" data-status="rejected">
+                    <i class="fas fa-times"></i> Отклонённые
+                    <span class="count" id="count-rejected">0</span>
+                </button>
+            </div>
+
+            <div id="reviews-container">
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 15px;">Загрузка отзывов...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let allReviews = [];
+        let currentFilter = 'all';
+
+        async function loadReviews() {
+            try {
+                const res = await apiRequest('/admin/reviews');
+                allReviews = await res.json();
+                
+                // Обновляем счётчики
+                document.getElementById('count-all').textContent = allReviews.length;
+                document.getElementById('count-pending').textContent = 
+                    allReviews.filter(r => r.status === 'pending').length;
+                document.getElementById('count-approved').textContent = 
+                    allReviews.filter(r => r.status === 'approved').length;
+                document.getElementById('count-rejected').textContent = 
+                    allReviews.filter(r => r.status === 'rejected').length;
+                
+                renderReviews();
+            } catch (e) {
+                console.error('Failed to load reviews:', e);
+                showToast('Ошибка загрузки отзывов', 'error');
+            }
+        }
+
+        function renderReviews() {
+            const container = document.getElementById('reviews-container');
+            let reviews = allReviews;
+            
+            if (currentFilter !== 'all') {
+                reviews = reviews.filter(r => r.status === currentFilter);
+            }
+            
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>Нет отзывов</h3>
+                        <p>В этой категории пока нет отзывов</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = reviews.map(r => {
+                const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                
+                const statusText = {
+                    'pending': 'Ожидает модерации',
+                    'approved': 'Одобрен',
+                    'rejected': 'Отклонён'
+                }[r.status];
+                
+                const date = new Date(r.created_at).toLocaleString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Проверяем наличие HTML/скриптов (XSS)
+                const hasHtml = /<[^>]*>/i.test(r.text);
+                const htmlWarning = hasHtml ? `
+                    <div class="xss-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Обнаружен HTML-код! Возможная XSS-атака.</span>
+                    </div>
+                ` : '';
+                
+                const isDeleted = r.product_active === 0;
+                
+                return `
+                    <div class="review-card status-${r.status}">
+                        <div class="review-header">
+                            <div class="review-product">
+                                <img src="${r.product_image || 'https://via.placeholder.com/70'}" 
+                                     alt="" onerror="this.src='https://via.placeholder.com/70'">
+                                <div class="review-product-info">
+                                    <div class="review-product-name ${isDeleted ? 'deleted' : ''}">
+                                        ${r.product_name}
+                                        ${isDeleted ? ' (удалён)' : ''}
+                                    </div>
+                                    <div class="review-meta">
+                                        <span><i class="fas fa-user"></i> ${r.user_name}</span>
+                                        <span><i class="fas fa-envelope"></i> ${r.user_email || 'email не указан'}</span>
+                                        <span><i class="fas fa-calendar"></i> ${date}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${r.status}">${statusText}</span>
+                        </div>
+                        
+                        <div class="review-rating" title="Оценка: ${r.rating} из 5">${stars}</div>
+                        
+                        <div class="review-text ${hasHtml ? 'has-html' : ''}">${escapeHtml(r.text)}</div>
+                        ${htmlWarning}
+                        
+                        <div class="review-actions">
+                            ${r.status === 'pending' ? `
+                                <button class="btn btn-sm btn-secondary" onclick="updateStatus(${r.id}, 'approved')">
+                                    <i class="fas fa-check"></i> Одобрить
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="updateStatus(${r.id}, 'rejected')">
+                                    <i class="fas fa-times"></i> Отклонить
+                                </button>
+                            ` : r.status === 'approved' ? `
+                                <button class="btn btn-sm btn-outline" onclick="updateStatus(${r.id}, 'rejected')">
+                                    <i class="fas fa-times"></i> Отклонить
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="updateStatus(${r.id}, 'pending')">
+                                    <i class="fas fa-undo"></i> На модерацию
+                                </button>
+                            ` : `
+                                <button class="btn btn-sm btn-secondary" onclick="updateStatus(${r.id}, 'approved')">
+                                    <i class="fas fa-check"></i> Одобрить
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="updateStatus(${r.id}, 'pending')">
+                                    <i class="fas fa-undo"></i> На модерацию
+                                </button>
+                            `}
+                            <button class="btn btn-sm btn-danger" onclick="deleteReview(${r.id})">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Экранирование HTML для безопасного отображения
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Фильтры
+        document.getElementById('filter-tabs').addEventListener('click', (e) => {
+            const tab = e.target.closest('.filter-tab');
+            if (!tab) return;
+            
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilter = tab.dataset.status;
+            renderReviews();
+        });
+
+        async function updateStatus(id, status) {
+            try {
+                const res = await apiRequest(`/admin/reviews/${id}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status })
+                });
+                
+                if (res.ok) {
+                    const statusText = {
+                        'approved': 'одобрен',
+                        'rejected': 'отклонён',
+                        'pending': 'отправлен на модерацию'
+                    }[status];
+                    showToast(`Отзыв ${statusText}`, 'success');
+                    loadReviews();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Ошибка', 'error');
+                }
+            } catch (e) {
+                showToast('Ошибка соединения', 'error');
+            }
+        }
+
+        async function deleteReview(id) {
+            if (!confirm('Удалить отзыв? Это действие нельзя отменить.')) return;
+            
+            try {
+                const res = await apiRequest(`/admin/reviews/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Отзыв удалён', 'success');
+                    loadReviews();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Ошибка удаления', 'error');
+                }
+            } catch (e) {
+                showToast('Ошибка соединения', 'error');
+            }
+        }
+
+        // Init
+        checkAuth();
+        loadReviews();
+    </script>
+</body>
+</html>

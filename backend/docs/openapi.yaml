@@ -1,4 +1,4 @@
-openapi: 3.0.3
+﻿openapi: 3.0.3
 
 info:
   title: TechShop API
@@ -21,6 +21,7 @@ tags:
   - name: Корзина
   - name: Заказы
   - name: Администрирование
+  - name: Отзывы
 
 components:
   securitySchemes:
@@ -74,6 +75,57 @@ components:
           type: string
         active:
           type: integer
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        product_id:
+          type: integer
+        user_id:
+          type: integer
+        user_name:
+          type: string
+        rating:
+          type: integer
+        text:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        created_at:
+          type: string
+        product_name:
+          type: string
+        product_image:
+          type: string
+        product_active:
+          type: integer
+        user_email:
+          type: string
+
+    ReviewStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        average:
+          type: number
+          format: float
+        distribution:
+          type: object
+          properties:
+            "5":
+              type: integer
+            "4":
+              type: integer
+            "3":
+              type: integer
+            "2":
+              type: integer
+            "1":
+              type: integer
 
 paths:
 
@@ -240,6 +292,223 @@ paths:
       responses:
         200:
           description: Товар добавлен
+
+  /reviews/product/{id}:
+    get:
+      tags: [Отзывы]
+      summary: Получить отзывы по товару
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Список отзывов и статистика
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Review"
+                  stats:
+                    $ref: "#/components/schemas/ReviewStats"
+
+  /reviews:
+    post:
+      tags: [Отзывы]
+      summary: Оставить отзыв о товаре
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, rating, text]
+              properties:
+                productId:
+                  type: integer
+                rating:
+                  type: integer
+                text:
+                  type: string
+      responses:
+        200:
+          description: Отзыв отправлен на модерацию
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  review:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      status:
+                        type: string
+                      created_at:
+                        type: string
+        400:
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Требуется авторизация
+        403:
+          description: Недействительный токен
+        404:
+          description: Товар не найден
+
+  /reviews/my:
+    get:
+      tags: [Отзывы]
+      summary: Получить мои отзывы
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Список отзывов пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+        401:
+          description: Требуется авторизация
+        403:
+          description: Недействительный токен
+
+  /reviews/{id}:
+    delete:
+      tags: [Отзывы]
+      summary: Удалить свой отзыв
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Отзыв удалён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Требуется авторизация
+        403:
+          description: Недействительный токен
+        404:
+          description: Отзыв не найден
+
+  /admin/reviews:
+    get:
+      tags: [Администрирование]
+      summary: Получить все отзывы (админ)
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Список отзывов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+        401:
+          description: Требуется авторизация
+        403:
+          description: Доступ только для администратора
+
+  /admin/reviews/{id}/status:
+    put:
+      tags: [Администрирование]
+      summary: Обновить статус отзыва (админ)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, approved, rejected]
+      responses:
+        200:
+          description: Статус отзыва обновлён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Ошибка валидации
+        401:
+          description: Требуется авторизация
+        403:
+          description: Доступ только для администратора
+        404:
+          description: Отзыв не найден
+
+  /admin/reviews/{id}:
+    delete:
+      tags: [Администрирование]
+      summary: Удалить отзыв (админ)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Отзыв удалён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Требуется авторизация
+        403:
+          description: Доступ только для администратора
+        404:
+          description: Отзыв не найден
 
   /orders/checkout:
     post:
