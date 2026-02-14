@@ -74,8 +74,8 @@ async function loadCart() {
 function createCartItem(item) {
     return `
         <div class="cart-item" data-id="${item.id}">
-            <img src="${item.image}" alt="${item.name}" class="cart-item-image"
-                 onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
+            <img src="${getProductImageUrl(item.image)}" alt="${item.name}" class="cart-item-image"
+                 onerror="handleProductImageError(this)">
             <div class="cart-item-details">
                 <div class="cart-item-name">${item.name}</div>
                 <div class="cart-item-price">${formatPrice(item.price * item.quantity)}</div>

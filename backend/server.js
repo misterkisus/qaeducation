@@ -8,6 +8,21 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'qa-training-secret-2024';
+const REVOKED_TOKENS = new Set();
+const DEFAULT_PRODUCT_IMAGE = '/img/product-placeholder.svg';
+
+function normalizeProductImage(image) {
+    if (typeof image !== 'string') return DEFAULT_PRODUCT_IMAGE;
+    const normalizedImage = image.trim();
+    if (!normalizedImage) return DEFAULT_PRODUCT_IMAGE;
+
+    const loweredImage = normalizedImage.toLowerCase();
+    if (loweredImage === 'null' || loweredImage === 'undefined') {
+        return DEFAULT_PRODUCT_IMAGE;
+    }
+
+    return normalizedImage;
+}
 
 // ===== СЕКРЕТНЫЙ КОД ДЛЯ ДОСТУПА К САЙТУ =====
 const SITE_ACCESS_CODE = 'PIZDA';
@@ -777,7 +792,7 @@ app.post('/api/admin/products', auth, adminOnly, (req, res) => {
         price: parseFloat(price) || 0,
         stock: parseInt(stock) || 0,
         category: category?.trim() || 'Другое',
-        image: image?.trim() || 'https://via.placeholder.com/400',
+        image: normalizeProductImage(image),
         active: 1,
         created_at: new Date().toISOString()
     };
@@ -797,7 +812,7 @@ app.put('/api/admin/products/:id', auth, adminOnly, (req, res) => {
     if (price !== undefined) product.price = parseFloat(price);
     if (stock !== undefined) product.stock = parseInt(stock);
     if (category !== undefined) product.category = category.trim();
-    if (image !== undefined) product.image = image.trim();
+    if (image !== undefined) product.image = normalizeProductImage(image);
     if (active !== undefined) product.active = active ? 1 : 0;
     if (!persistOr500(res)) return;
     

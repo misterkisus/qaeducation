@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">No image</title>
+  <desc id="desc">Default gray placeholder for product image</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e7e9ee"/>
+      <stop offset="100%" stop-color="#d4d9e2"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <g fill="#8f97a6">
+    <rect x="245" y="175" width="310" height="220" rx="24"/>
+    <circle cx="332" cy="250" r="30"/>
+    <path d="M280 350l78-70 58 50 44-34 60 54z"/>
+  </g>
+</svg>

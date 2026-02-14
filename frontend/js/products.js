@@ -69,8 +69,8 @@ function createProductCard(p) {
                 </button>`;
     
     return `<div class="product-card">
-        <img src="${p.image}" alt="${p.name}" class="product-image" 
-             onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+        <img src="${getProductImageUrl(p.image)}" alt="${p.name}" class="product-image" 
+             onerror="handleProductImageError(this)">
           <div class="product-info">
               <div class="product-name" data-tooltip="${p.name}">
                   <span class="product-name__text">${p.name}</span>
