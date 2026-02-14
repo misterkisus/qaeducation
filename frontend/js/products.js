@@ -1,11 +1,13 @@
 let wishlistProductIds = new Set();
 let isWishlistStateLoaded = false;
 let wishlistStatePromise = null;
+let productsAbortController = null;
+let productsRequestId = 0;
+let hasLoadedProductsOnce = false;
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('products-grid')) {
-        await ensureWishlistStateLoaded();
-        loadProducts();
+        loadProducts({}, { showSkeleton: true });
         loadCategories();
         setupFilters();
         if (typeof updateWishlistCount === 'function') {
@@ -54,11 +56,19 @@ async function ensureWishlistStateLoaded(force = false) {
     await wishlistStatePromise;
 }
 
-async function loadProducts(params = {}) {
+async function loadProducts(params = {}, options = {}) {
+    const { showSkeleton = false } = options;
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    grid.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Загрузка...</p></div>';
+    const requestId = ++productsRequestId;
+    if (productsAbortController) productsAbortController.abort();
+    productsAbortController = new AbortController();
+
+    if (showSkeleton && !hasLoadedProductsOnce) {
+        grid.innerHTML = createProductSkeletons();
+    }
+    grid.classList.add('is-loading');
 
     try {
         await ensureWishlistStateLoaded();
@@ -71,39 +81,66 @@ async function loadProducts(params = {}) {
         if (params.sort) qp.append('sort', params.sort);
         if (qp.toString()) url += `?${qp.toString()}`;
 
-        console.log('Fetching products from:', url);
-
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: productsAbortController.signal });
 
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
         }
 
         const products = await res.json();
+        if (requestId !== productsRequestId) return;
 
         if (!products.length) {
             grid.innerHTML = `
                 <div class="empty-state" style="grid-column: 1/-1;">
                     <i class="fas fa-box-open"></i>
-                    <h3>Товары не найдены</h3>
-                    <p>Попробуйте изменить параметры поиска</p>
+                    <h3>No products found</h3>
+                    <p>Try changing your search filters</p>
                 </div>
             `;
+            hasLoadedProductsOnce = true;
             return;
         }
 
         grid.innerHTML = products.map((p) => createProductCard(p)).join('');
+        hasLoadedProductsOnce = true;
     } catch (e) {
+        if (e.name === 'AbortError') return;
+        if (requestId !== productsRequestId) return;
+
         console.error('Failed to load products:', e);
         grid.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
                 <i class="fas fa-exclamation-triangle"></i>
-                <h3>Ошибка загрузки</h3>
-                <p>Не удалось загрузить товары. Попробуйте обновить страницу.</p>
-                <button class="btn btn-primary" onclick="loadProducts()">Повторить</button>
+                <h3>Loading error</h3>
+                <p>Could not load products. Please refresh the page.</p>
+                <button class="btn btn-primary" onclick="loadProducts()">Retry</button>
             </div>
         `;
+        hasLoadedProductsOnce = true;
+    } finally {
+        if (requestId === productsRequestId) {
+            grid.classList.remove('is-loading');
+        }
     }
+}
+
+function createProductSkeletons(count = 8) {
+    return Array.from({ length: count }, () => `
+        <article class="product-card skeleton-card" aria-hidden="true">
+            <div class="skeleton-media"></div>
+            <div class="product-info">
+                <div class="skeleton-line skeleton-line--title"></div>
+                <div class="skeleton-line skeleton-line--meta"></div>
+                <div class="skeleton-line skeleton-line--price"></div>
+                <div class="skeleton-line skeleton-line--stock"></div>
+                <div class="skeleton-actions">
+                    <span class="skeleton-btn"></span>
+                    <span class="skeleton-btn"></span>
+                </div>
+            </div>
+        </article>
+    `).join('');
 }
 
 function createProductCard(p) {
