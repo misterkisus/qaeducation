@@ -137,3 +137,5 @@ backend/node_modules/yamljs/test/lib/jasmine-2.0.0/MIT.LICENSE
 backend/node_modules/yamljs/test/spec/example.yml
 backend/node_modules/yamljs/test/spec/YamlSpec.coffee
 backend/node_modules/yamljs/test/spec/YamlSpec.js
+backend/node_modules/.package-lock.json
+backend/data/store.json

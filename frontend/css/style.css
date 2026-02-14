@@ -326,6 +326,15 @@ html {
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
+.product-card--clickable {
+    cursor: pointer;
+}
+
+.product-card--clickable:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
 .product-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 20px rgba(0,0,0,0.15);
