@@ -93,7 +93,7 @@ async function login(email, password) {
             localStorage.setItem('authToken', authToken);
             currentUser = data.user;
             showToast('Вход выполнен!', 'success');
-            window.location.href = data.user.role === 'admin' ? '/pages/admin/dashboard.html' : '/';
+            window.location.replace(data.user.role === 'admin' ? '/pages/admin/dashboard.html' : '/');
         } else {
             showToast(data.error || 'Ошибка входа', 'error');
         }
@@ -117,7 +117,7 @@ async function register(email, password, name) {
             authToken = data.token;
             localStorage.setItem('authToken', authToken);
             showToast('Регистрация успешна!', 'success');
-            window.location.href = '/';
+            window.location.replace('/');
         } else {
             showToast(data.error || 'Ошибка регистрации', 'error');
         }
