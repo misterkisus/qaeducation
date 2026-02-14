@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>РђРґРјРёРЅ-РїР°РЅРµР»СЊ - TechShop</title>
+    <title>Дашборд - Админ-панель</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,7 +15,7 @@
         .stat-card .sub { font-size: 0.85rem; opacity: 0.7; margin-top: 5px; }
         .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .quick-action { display: flex; flex-direction: column; align-items: center; padding: 25px 15px; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); text-decoration: none; color: var(--text); transition: transform 0.2s, box-shadow 0.2s; }
-        .quick-action:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
+        .quick-action:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15); }
         .quick-action i { font-size: 2rem; color: var(--primary); margin-bottom: 12px; }
         .quick-action span { font-weight: 500; text-align: center; }
         .alert-badge { background: #f44336; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: 8px; }
@@ -32,51 +32,51 @@
     <div class="admin-layout">
         <aside class="admin-sidebar">
             <nav class="admin-menu">
-                <a href="/pages/admin/dashboard.html" class="active"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Products</a>
-                <a href="/pages/admin/orders.html"><i class="fas fa-shopping-bag"></i> Orders</a>
+                <a href="/pages/admin/dashboard.html" class="active"><i class="fas fa-chart-line"></i> Дашборд</a>
+                <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Товары</a>
+                <a href="/pages/admin/orders.html"><i class="fas fa-shopping-bag"></i> Заказы</a>
                 <a href="/pages/admin/reviews.html">
-                    <i class="fas fa-star"></i> Reviews
+                    <i class="fas fa-star"></i> Отзывы
                     <span class="alert-badge" id="pending-badge" style="display: none;">0</span>
                 </a>
-                <a href="/pages/admin/wishlist.html"><i class="fas fa-heart"></i> Wishlist</a>
-                <a href="/"><i class="fas fa-store"></i> Store</a>
+                <a href="/pages/admin/wishlist.html"><i class="fas fa-heart"></i> Избранное</a>
+                <a href="/"><i class="fas fa-store"></i> На сайт</a>
             </nav>
         </aside>
 
         <main class="admin-content">
             <div class="admin-header">
-                <h1><i class="fas fa-chart-line"></i> Р”Р°С€Р±РѕСЂРґ</h1>
-                <span style="color: var(--text-light);">Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ РїР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ</span>
+                <h1><i class="fas fa-chart-line"></i> Дашборд</h1>
+                <span style="color: var(--text-light);">Панель управления магазином</span>
             </div>
 
             <div class="stats-grid" id="stats-grid">
-                <div class="stat-card"><h3>Р—Р°РіСЂСѓР·РєР°...</h3></div>
+                <div class="stat-card"><h3>Загрузка...</h3></div>
             </div>
 
-            <h3 style="margin-bottom: 15px;"><i class="fas fa-bolt"></i> Р‘С‹СЃС‚СЂС‹Рµ РґРµР№СЃС‚РІРёСЏ</h3>
+            <h3 style="margin-bottom: 15px;"><i class="fas fa-bolt"></i> Быстрые действия</h3>
             <div class="quick-actions">
                 <a href="/pages/admin/products.html" class="quick-action">
                     <i class="fas fa-plus-circle"></i>
-                    <span>Р”РѕР±Р°РІРёС‚СЊ С‚РѕРІР°СЂ</span>
+                    <span>Добавить товар</span>
                 </a>
                 <a href="/pages/admin/orders.html" class="quick-action">
                     <i class="fas fa-clipboard-list"></i>
-                    <span>Р’СЃРµ Р·Р°РєР°Р·С‹</span>
+                    <span>Все заказы</span>
                 </a>
                 <a href="/pages/admin/reviews.html" class="quick-action">
                     <i class="fas fa-star"></i>
-                    <span>РњРѕРґРµСЂР°С†РёСЏ</span>
+                    <span>Модерация отзывов</span>
                 </a>
                 <a href="/" class="quick-action">
                     <i class="fas fa-external-link-alt"></i>
-                    <span>РћС‚РєСЂС‹С‚СЊ СЃР°Р№С‚</span>
+                    <span>Открыть сайт</span>
                 </a>
             </div>
 
-            <h3 style="margin-bottom: 15px;"><i class="fas fa-clock"></i> РџРѕСЃР»РµРґРЅРёРµ Р·Р°РєР°Р·С‹</h3>
+            <h3 style="margin-bottom: 15px;"><i class="fas fa-clock"></i> Последние заказы</h3>
             <div id="recent-orders">
-                <p style="color: var(--text-light);">Р—Р°РіСЂСѓР·РєР°...</p>
+                <p style="color: var(--text-light);">Загрузка...</p>
             </div>
         </main>
     </div>
@@ -85,72 +85,81 @@
 
     <script src="/js/app.js"></script>
     <script>
+        function getOrderStatusLabel(status) {
+            const labels = {
+                pending: 'Ожидает',
+                processing: 'В обработке',
+                shipped: 'Отправлен',
+                delivered: 'Доставлен',
+                cancelled: 'Отменён'
+            };
+            return labels[status] || status;
+        }
+
         async function loadDashboard() {
             try {
                 const statsRes = await apiRequest('/admin/stats');
                 const stats = await statsRes.json();
-                
-                // РџРѕРєР°Р·Р°С‚СЊ Р±РµР№РґР¶ СЃ РєРѕР»РёС‡РµСЃС‚РІРѕРј РѕС‚Р·С‹РІРѕРІ РЅР° РјРѕРґРµСЂР°С†РёРё
+
                 if (stats.pendingReviews > 0) {
                     const badge = document.getElementById('pending-badge');
                     badge.textContent = stats.pendingReviews;
                     badge.style.display = 'inline';
                 }
-                
+
                 document.getElementById('stats-grid').innerHTML = `
                     <div class="stat-card highlight">
-                        <h3><i class="fas fa-ruble-sign"></i> Р’С‹СЂСѓС‡РєР°</h3>
+                        <h3><i class="fas fa-ruble-sign"></i> Выручка</h3>
                         <div class="value">${formatPrice(stats.totalRevenue)}</div>
-                        <div class="sub">${stats.totalOrders} Р·Р°РєР°Р·РѕРІ</div>
+                        <div class="sub">${stats.totalOrders} заказов</div>
                     </div>
                     <div class="stat-card">
-                        <h3><i class="fas fa-box"></i> РўРѕРІР°СЂРѕРІ</h3>
+                        <h3><i class="fas fa-box"></i> Товары</h3>
                         <div class="value">${stats.totalProducts}</div>
-                        <div class="sub">${stats.outOfStockProducts} РЅРµС‚ РІ РЅР°Р»РёС‡РёРё</div>
+                        <div class="sub">${stats.outOfStockProducts} нет в наличии</div>
                     </div>
                     <div class="stat-card">
-                        <h3><i class="fas fa-users"></i> РџРѕР»СЊР·РѕРІР°С‚РµР»РµР№</h3>
+                        <h3><i class="fas fa-users"></i> Пользователи</h3>
                         <div class="value">${stats.totalUsers}</div>
                     </div>
                     <div class="stat-card">
-                        <h3><i class="fas fa-star"></i> РћС‚Р·С‹РІРѕРІ</h3>
+                        <h3><i class="fas fa-star"></i> Отзывы</h3>
                         <div class="value">${stats.totalReviews || 0}</div>
-                        <div class="sub">${stats.pendingReviews || 0} РЅР° РјРѕРґРµСЂР°С†РёРё</div>
+                        <div class="sub">${stats.pendingReviews || 0} на модерации</div>
                     </div>
                 `;
-                
-                // РџРѕСЃР»РµРґРЅРёРµ Р·Р°РєР°Р·С‹
+
                 const ordersRes = await apiRequest('/admin/orders');
                 const orders = await ordersRes.json();
-                
+
                 if (orders.length === 0) {
                     document.getElementById('recent-orders').innerHTML = `
                         <div style="text-align: center; padding: 40px; color: var(--text-light);">
                             <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                            <p>Р—Р°РєР°Р·РѕРІ РїРѕРєР° РЅРµС‚</p>
+                            <p>Заказов пока нет</p>
                         </div>
                     `;
                     return;
                 }
-                
+
                 document.getElementById('recent-orders').innerHTML = `
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>в„–</th>
-                                <th>РљР»РёРµРЅС‚</th>
-                                <th>РЎСѓРјРјР°</th>
-                                <th>РЎС‚Р°С‚СѓСЃ</th>
-                                <th>Р”Р°С‚Р°</th>
+                                <th>№</th>
+                                <th>Клиент</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${orders.slice(0, 5).map(o => `
+                            ${orders.slice(0, 5).map((o) => `
                                 <tr>
                                     <td><strong>#${o.id}</strong></td>
                                     <td>${o.user_name || o.email}</td>
                                     <td>${formatPrice(o.total)}</td>
-                                    <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+                                    <td><span class="status-badge status-${o.status}">${getOrderStatusLabel(o.status)}</span></td>
                                     <td>${formatDate(o.created_at)}</td>
                                 </tr>
                             `).join('')}
@@ -158,14 +167,13 @@
                     </table>
                     ${orders.length > 5 ? `
                         <div style="text-align: center; margin-top: 15px;">
-                            <a href="/pages/admin/orders.html" class="btn btn-outline btn-sm">Р’СЃРµ Р·Р°РєР°Р·С‹ в†’</a>
+                            <a href="/pages/admin/orders.html" class="btn btn-outline btn-sm">Все заказы</a>
                         </div>
                     ` : ''}
                 `;
-                
             } catch (e) {
                 console.error('Failed to load dashboard:', e);
-                showToast('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С…', 'error');
+                showToast('Ошибка загрузки данных', 'error');
             }
         }
 
@@ -174,4 +182,3 @@
     </script>
 </body>
 </html>
-

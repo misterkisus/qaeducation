@@ -21,6 +21,8 @@
                 <a href="/pages/admin/dashboard.html"><i class="fas fa-chart-line"></i> Дашборд</a>
                 <a href="/pages/admin/products.html"><i class="fas fa-box"></i> Товары</a>
                 <a href="/pages/admin/orders.html" class="active"><i class="fas fa-shopping-bag"></i> Заказы</a>
+                <a href="/pages/admin/reviews.html"><i class="fas fa-star"></i> Отзывы</a>
+                <a href="/pages/admin/wishlist.html"><i class="fas fa-heart"></i> Избранное</a>
                 <a href="/"><i class="fas fa-store"></i> На сайт</a>
             </nav>
         </aside>
@@ -56,23 +58,22 @@
             try {
                 const res = await apiRequest('/admin/orders');
                 const orders = await res.json();
-                
                 const tbody = document.getElementById('orders-tbody');
-                
+
                 if (orders.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">Нет заказов</td></tr>';
                     return;
                 }
-                
-                tbody.innerHTML = orders.map(o => `
+
+                tbody.innerHTML = orders.map((o) => `
                     <tr>
                         <td><strong>#${o.id}</strong></td>
                         <td>
-                            <div>${o.user_name}</div>
-                            <small style="color: var(--text-light);">${o.email}</small>
+                            <div>${o.user_name || '-'}</div>
+                            <small style="color: var(--text-light);">${o.email || '-'}</small>
                         </td>
                         <td style="max-width: 250px;">
-                            ${o.items.map(i => `<div>${i.product_name} ×${i.quantity}</div>`).join('')}
+                            ${o.items.map((i) => `<div>${i.product_name} x${i.quantity}</div>`).join('')}
                         </td>
                         <td>
                             <strong>${formatPrice(o.total)}</strong>
@@ -102,19 +103,19 @@
                     method: 'PUT',
                     body: JSON.stringify({ status })
                 });
+
                 if (res.ok) {
                     showToast('Статус обновлён', 'success');
                 } else {
                     const data = await res.json();
                     showToast(data.error || 'Ошибка', 'error');
-                    loadOrders(); // Перезагрузить чтобы откатить изменение
+                    loadOrders();
                 }
             } catch (e) {
                 showToast('Ошибка соединения', 'error');
             }
         }
 
-        // Init
         checkAuth();
         loadOrders();
     </script>
