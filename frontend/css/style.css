@@ -447,6 +447,15 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.cart-item-clickable {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.cart-item-clickable:hover {
+    background-color: var(--bg-color);
+}
+
 .cart-item:last-child {
     border-bottom: none;
 }
