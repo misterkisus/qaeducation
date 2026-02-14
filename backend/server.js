@@ -395,6 +395,13 @@ function parsePromocodeExpiryDate(expiresAt, options = {}) {
 
     return { value: dateOnly };
 }
+function normalizeSearchText(value) {
+    if (typeof value !== 'string') return '';
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ');
+}
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, name } = req.body;
@@ -447,12 +454,19 @@ app.get('/api/products', (req, res) => {
         products = products.filter(p => p.category === req.query.category);
     }
     if (req.query.search) {
-        const s = req.query.search.toLowerCase();
-        products = products.filter(p =>
-            p.name.toLowerCase().includes(s) ||
-            p.description.toLowerCase().includes(s) ||
-            (p.category || '').toLowerCase().includes(s)
-        );
+        const searchTerm = normalizeSearchText(req.query.search);
+        if (searchTerm) {
+            products = products.filter((p) => {
+                const name = normalizeSearchText(p.name);
+                const description = normalizeSearchText(p.description || '');
+                const category = normalizeSearchText(p.category || '');
+                return (
+                    name.includes(searchTerm) ||
+                    description.includes(searchTerm) ||
+                    category.includes(searchTerm)
+                );
+            });
+        }
     }
     if (req.query.sort === 'price_asc') products.sort((a, b) => a.price - b.price);
     else if (req.query.sort === 'price_desc') products.sort((a, b) => b.price - a.price);
