@@ -156,12 +156,18 @@ function createDefaultData() {
             { id: 7, product_id: 5, user_id: 2, user_name: 'Test User', rating: 4, text: 'Хороший повербанк, заряжает быстро. Немного тяжеловат.', status: 'approved', created_at: '2024-01-25T12:00:00.000Z' },
             { id: 8, product_id: 3, user_id: 2, user_name: 'Test User', rating: 5, text: 'Сумка премиум класса! Кожа настоящая, пахнет приятно. Ноутбук влезает идеально.', status: 'rejected', created_at: '2024-01-26T15:30:00.000Z' }
         ],
+        wishlist: [
+            { id: 1, user_id: 2, product_id: 1, created_at: '2024-01-10T10:00:00.000Z' },
+            { id: 2, user_id: 2, product_id: 4, created_at: '2024-01-12T14:30:00.000Z' },
+            { id: 3, user_id: 2, product_id: 7, created_at: '2024-01-15T09:15:00.000Z' }
+        ],
         nextUserId: 3,
         nextProductId: 13,
         nextCartId: 1,
         nextOrderId: 1,
         nextPromocodeId: 7,
-        nextReviewId: 9
+        nextReviewId: 9,
+        nextWishlistId: 4
     };
 }
 
@@ -184,12 +190,14 @@ function normalizeDataShape(rawData) {
         orderItems: Array.isArray(data.orderItems) ? data.orderItems : defaults.orderItems,
         promocodes: Array.isArray(data.promocodes) ? data.promocodes : defaults.promocodes,
         reviews: Array.isArray(data.reviews) ? data.reviews : defaults.reviews,
+        wishlist: Array.isArray(data.wishlist) ? data.wishlist : defaults.wishlist,
         nextUserId: Number.isInteger(data.nextUserId) ? data.nextUserId : nextIdFrom(Array.isArray(data.users) ? data.users : defaults.users),
         nextProductId: Number.isInteger(data.nextProductId) ? data.nextProductId : nextIdFrom(Array.isArray(data.products) ? data.products : defaults.products),
         nextCartId: Number.isInteger(data.nextCartId) ? data.nextCartId : nextIdFrom(Array.isArray(data.cart) ? data.cart : defaults.cart),
         nextOrderId: Number.isInteger(data.nextOrderId) ? data.nextOrderId : nextIdFrom(Array.isArray(data.orders) ? data.orders : defaults.orders),
         nextPromocodeId: Number.isInteger(data.nextPromocodeId) ? data.nextPromocodeId : nextIdFrom(Array.isArray(data.promocodes) ? data.promocodes : defaults.promocodes),
-        nextReviewId: Number.isInteger(data.nextReviewId) ? data.nextReviewId : nextIdFrom(Array.isArray(data.reviews) ? data.reviews : defaults.reviews)
+        nextReviewId: Number.isInteger(data.nextReviewId) ? data.nextReviewId : nextIdFrom(Array.isArray(data.reviews) ? data.reviews : defaults.reviews),
+        nextWishlistId: Number.isInteger(data.nextWishlistId) ? data.nextWishlistId : nextIdFrom(Array.isArray(data.wishlist) ? data.wishlist : defaults.wishlist)
     };
 
     return normalized;
@@ -769,7 +777,9 @@ app.get('/api/admin/stats', auth, adminOnly, (req, res) => {
         lowStockProducts: DATA.products.filter(p => p.active && p.stock > 0 && p.stock < 10).length,
         outOfStockProducts: DATA.products.filter(p => p.active && p.stock === 0).length,
         pendingReviews: DATA.reviews.filter(r => r.status === 'pending').length,
-        totalReviews: DATA.reviews.length
+        totalReviews: DATA.reviews.length,
+        activePromocodes: DATA.promocodes.filter(p => p.active).length,
+        totalWishlistItems: DATA.wishlist.length
     });
 });
 
@@ -908,6 +918,194 @@ app.delete('/api/admin/reviews/:id', auth, adminOnly, (req, res) => {
     DATA.reviews.splice(index, 1);
     if (!persistOr500(res)) return;
     res.json({ message: 'Отзыв удалён' });
+});
+
+// ============ WISHLIST ROUTES ============
+
+// Получить избранное пользователя
+app.get('/api/wishlist', auth, (req, res) => {
+    // BUG #17: Не фильтруются удалённые/неактивные товары
+    // Правильно: .filter(p => p && p.active === 1)
+    const items = DATA.wishlist
+        .filter(w => w.user_id === req.user.id)
+        .map(w => {
+            const product = DATA.products.find(p => p.id === w.product_id);
+            // Возвращаем даже если товар удалён (это баг!)
+            return {
+                id: w.id,
+                product_id: w.product_id,
+                product: product || null, // может быть null если товар удалён
+                added_at: w.created_at
+            };
+        })
+        .sort((a, b) => new Date(b.added_at) - new Date(a.added_at));
+    
+    res.json({
+        items,
+        count: items.length
+    });
+});
+
+// Добавить в избранное
+app.post('/api/wishlist/add', auth, (req, res) => {
+    const { productId } = req.body;
+    
+    if (!productId) {
+        return res.status(400).json({ error: 'ID товара обязателен' });
+    }
+    
+    const product = DATA.products.find(p => p.id === parseInt(productId) && p.active === 1);
+    if (!product) {
+        return res.status(404).json({ error: 'Товар не найден' });
+    }
+    
+    // BUG #16: Нет проверки на дубликаты!
+    // Правильно было бы:
+    // const existing = DATA.wishlist.find(w => w.user_id === req.user.id && w.product_id === parseInt(productId));
+    // if (existing) {
+    //     return res.status(400).json({ error: 'Товар уже в избранном' });
+    // }
+    
+    // BUG #19: Нет лимита на количество товаров в избранном
+    // Правильно было бы:
+    // const userWishlistCount = DATA.wishlist.filter(w => w.user_id === req.user.id).length;
+    // if (userWishlistCount >= 50) {
+    //     return res.status(400).json({ error: 'Достигнут лимит избранного (50 товаров)' });
+    // }
+    
+    const wishlistItem = {
+        id: DATA.nextWishlistId++,
+        user_id: req.user.id,
+        product_id: parseInt(productId),
+        created_at: new Date().toISOString()
+    };
+    
+    DATA.wishlist.push(wishlistItem);
+    
+    res.json({ 
+        message: 'Товар добавлен в избранное',
+        id: wishlistItem.id
+    });
+});
+
+// Удалить из избранного
+app.delete('/api/wishlist/:id', auth, (req, res) => {
+    const index = DATA.wishlist.findIndex(
+        w => w.id === parseInt(req.params.id) && w.user_id === req.user.id
+    );
+    
+    if (index === -1) {
+        return res.status(404).json({ error: 'Товар не найден в избранном' });
+    }
+    
+    DATA.wishlist.splice(index, 1);
+    res.json({ message: 'Товар удалён из избранного' });
+});
+
+// Удалить из избранного по ID товара
+app.delete('/api/wishlist/product/:productId', auth, (req, res) => {
+    const productId = parseInt(req.params.productId);
+    const initialLength = DATA.wishlist.length;
+    
+    DATA.wishlist = DATA.wishlist.filter(
+        w => !(w.user_id === req.user.id && w.product_id === productId)
+    );
+    
+    if (DATA.wishlist.length === initialLength) {
+        return res.status(404).json({ error: 'Товар не найден в избранном' });
+    }
+    
+    res.json({ message: 'Товар удалён из избранного' });
+});
+
+// Проверить, есть ли товар в избранном
+app.get('/api/wishlist/check/:productId', auth, (req, res) => {
+    const productId = parseInt(req.params.productId);
+    const inWishlist = DATA.wishlist.some(
+        w => w.user_id === req.user.id && w.product_id === productId
+    );
+    res.json({ inWishlist });
+});
+
+// Получить количество товаров в избранном
+app.get('/api/wishlist/count', auth, (req, res) => {
+    const count = DATA.wishlist.filter(w => w.user_id === req.user.id).length;
+    res.json({ count });
+});
+
+// Переместить из избранного в корзину
+app.post('/api/wishlist/:id/move-to-cart', auth, (req, res) => {
+    const wishlistItem = DATA.wishlist.find(
+        w => w.id === parseInt(req.params.id) && w.user_id === req.user.id
+    );
+    
+    if (!wishlistItem) {
+        return res.status(404).json({ error: 'Товар не найден в избранном' });
+    }
+    
+    const product = DATA.products.find(p => p.id === wishlistItem.product_id && p.active === 1);
+    if (!product) {
+        return res.status(404).json({ error: 'Товар больше не доступен' });
+    }
+    
+    if (product.stock < 1) {
+        return res.status(400).json({ error: 'Товар закончился на складе' });
+    }
+    
+    // Добавляем в корзину
+    const existingCartItem = DATA.cart.find(
+        c => c.user_id === req.user.id && c.product_id === wishlistItem.product_id
+    );
+    
+    if (existingCartItem) {
+        if (existingCartItem.quantity + 1 > product.stock) {
+            return res.status(400).json({ error: `Недостаточно товара. Доступно: ${product.stock}` });
+        }
+        existingCartItem.quantity += 1;
+    } else {
+        DATA.cart.push({
+            id: DATA.nextCartId++,
+            user_id: req.user.id,
+            product_id: wishlistItem.product_id,
+            quantity: 1
+        });
+    }
+    
+    // Удаляем из избранного
+    DATA.wishlist = DATA.wishlist.filter(w => w.id !== wishlistItem.id);
+    
+    res.json({ message: 'Товар перемещён в корзину' });
+});
+
+// ============ ADMIN WISHLIST STATS ============
+app.get('/api/admin/wishlist/stats', auth, adminOnly, (req, res) => {
+    // Статистика популярности товаров в избранном
+    const productStats = {};
+    
+    DATA.wishlist.forEach(w => {
+        if (!productStats[w.product_id]) {
+            const product = DATA.products.find(p => p.id === w.product_id);
+            productStats[w.product_id] = {
+                product_id: w.product_id,
+                product_name: product?.name || 'Удалённый товар',
+                product_image: product?.image,
+                product_active: product?.active || 0,
+                count: 0
+            };
+        }
+        productStats[w.product_id].count++;
+    });
+    
+    const topProducts = Object.values(productStats)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    
+    res.json({
+        totalItems: DATA.wishlist.length,
+        uniqueProducts: Object.keys(productStats).length,
+        uniqueUsers: [...new Set(DATA.wishlist.map(w => w.user_id))].length,
+        topProducts
+    });
 });
 
 // ============ SPA FALLBACK ============
