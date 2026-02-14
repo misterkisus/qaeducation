@@ -1,6 +1,3 @@
-backend/node_modules/.package-lock.json
-backend/node_modules/.package-lock.json
-backend/data/
 backend/node_modules/.bin/json2yaml
 backend/node_modules/.bin/json2yaml.cmd
 backend/node_modules/.bin/json2yaml.ps1
@@ -140,6 +137,3 @@ backend/node_modules/yamljs/test/lib/jasmine-2.0.0/MIT.LICENSE
 backend/node_modules/yamljs/test/spec/example.yml
 backend/node_modules/yamljs/test/spec/YamlSpec.coffee
 backend/node_modules/yamljs/test/spec/YamlSpec.js
-backend/node_modules/.package-lock.json
-backend/node_modules/.package-lock.json
-backend/data/store.json

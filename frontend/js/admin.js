@@ -1,5 +1,6 @@
 // Admin Functions
 let editingProductId = null;
+let adminProductsCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     loadAdminProducts();
@@ -13,8 +14,12 @@ async function loadAdminProducts() {
     if (!tbody) return;
 
     try {
-        const response = await apiRequest('/admin/products');
+        const response = await apiRequest('/admin/products', { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`Failed to load products (${response.status})`);
+        }
         const products = await response.json();
+        adminProductsCache = products;
 
         tbody.innerHTML = products.map(product => `
             <tr>
@@ -37,6 +42,8 @@ async function loadAdminProducts() {
                 </td>
             </tr>
         `).join('');
+
+        return products;
     } catch (error) {
         console.error('Failed to load products:', error);
     }
@@ -50,7 +57,8 @@ function openProductModal(product = null) {
     if (product) {
         title.textContent = 'Редактировать товар';
         editingProductId = product.id;
-        document.getElementById('product-id').value = product.id;
+        const idInput = document.getElementById('product-id');
+        if (idInput) idInput.value = product.id;
         document.getElementById('product-name').value = product.name;
         document.getElementById('product-description').value = product.description || '';
         document.getElementById('product-price').value = product.price;
@@ -75,15 +83,21 @@ function closeProductModal() {
 // Edit Product
 async function editProduct(id) {
     try {
-        const response = await apiRequest(`/admin/products`);
-        const products = await response.json();
-        const product = products.find(p => p.id === id);
-        
+        let product = adminProductsCache.find(p => p.id === id);
+
+        if (!product) {
+            const products = await loadAdminProducts();
+            product = products ? products.find(p => p.id === id) : null;
+        }
+
         if (product) {
             openProductModal(product);
+        } else {
+            showToast('Product not found', 'error');
         }
     } catch (error) {
-        showToast('Ошибка загрузки товара', 'error');
+        console.error('Failed to load product:', error);
+        showToast('Failed to load product', 'error');
     }
 }
 

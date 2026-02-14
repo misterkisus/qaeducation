@@ -10,10 +10,7 @@
 <body>
     <header class="header">
         <div class="container">
-            <a href="/" class="logo">
-                <i class="fas fa-shopping-bag"></i>
-                TechShop
-            </a>
+            <a href="/" class="logo"><i class="fas fa-shopping-bag"></i> TechShop</a>
             <div class="auth-section" id="auth-section"></div>
         </div>
     </header>
@@ -21,44 +18,28 @@
     <div class="admin-layout">
         <aside class="admin-sidebar">
             <nav class="admin-menu">
-                <a href="/pages/admin/dashboard.html">
-                    <i class="fas fa-chart-line"></i>
-                    Дашборд
-                </a>
-                <a href="/pages/admin/products.html" class="active">
-                    <i class="fas fa-box"></i>
-                    Товары
-                </a>
-                <a href="/pages/admin/orders.html">
-                    <i class="fas fa-shopping-bag"></i>
-                    Заказы
-                </a>
-                <a href="/pages/admin/wishlist.html">
-                    <i class="fas fa-heart"></i>
-                    Избранное
-                </a>
-
-                <a href="/">
-                    <i class="fas fa-store"></i>
-                    На сайт
-                </a>
+                <a href="/pages/admin/dashboard.html"><i class="fas fa-chart-line"></i> Дашборд</a>
+                <a href="/pages/admin/products.html" class="active"><i class="fas fa-box"></i> Товары</a>
+                <a href="/pages/admin/orders.html"><i class="fas fa-shopping-bag"></i> Заказы</a>
+                <a href="/pages/admin/wishlist.html"><i class="fas fa-heart"></i> Избранное</a>
+                <a href="/pages/admin/promocodes.html"><i class="fas fa-ticket-alt"></i> Промокоды</a>
+                <a href="/"><i class="fas fa-store"></i> На сайт</a>
             </nav>
         </aside>
 
         <main class="admin-content">
             <div class="admin-header">
-                <h1>Управление товарами</h1>
+                <h1><i class="fas fa-box"></i> Управление товарами</h1>
                 <button class="btn btn-primary" onclick="openProductModal()">
-                    <i class="fas fa-plus"></i>
-                    Добавить товар
+                    <i class="fas fa-plus"></i> Добавить товар
                 </button>
             </div>
 
-            <table class="data-table" id="products-table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Изображение</th>
+                        <th>Фото</th>
                         <th>Название</th>
                         <th>Цена</th>
                         <th>Остаток</th>
@@ -67,7 +48,7 @@
                     </tr>
                 </thead>
                 <tbody id="products-tbody">
-                    <!-- Products loaded dynamically -->
+                    <tr><td colspan="7" style="text-align: center;">Загрузка...</td></tr>
                 </tbody>
             </table>
         </main>
@@ -81,41 +62,32 @@
                 <button class="modal-close" onclick="closeProductModal()">&times;</button>
             </div>
             <form id="product-form">
-                <input type="hidden" id="product-id">
-                
                 <div class="form-group">
                     <label for="product-name">Название *</label>
                     <input type="text" id="product-name" required>
                 </div>
-
                 <div class="form-group">
                     <label for="product-description">Описание</label>
-                    <textarea id="product-description"></textarea>
+                    <textarea id="product-description" rows="3"></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="product-price">Цена *</label>
-                    <!-- BUG #3: Нет min="0" - можно ввести отрицательную цену -->
                     <input type="number" id="product-price" step="0.01" required>
                 </div>
-
                 <div class="form-group">
                     <label for="product-stock">Остаток на складе</label>
                     <input type="number" id="product-stock" min="0" value="0">
                 </div>
-
                 <div class="form-group">
                     <label for="product-category">Категория</label>
-                    <input type="text" id="product-category">
+                    <input type="text" id="product-category" placeholder="Electronics">
                 </div>
-
                 <div class="form-group">
                     <label for="product-image">URL изображения</label>
                     <input type="text" id="product-image" placeholder="https://...">
                 </div>
-
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Сохранить
+                    <i class="fas fa-save"></i> Сохранить
                 </button>
             </form>
         </div>

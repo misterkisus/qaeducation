@@ -40,6 +40,7 @@
                     <span class="alert-badge" id="pending-badge" style="display: none;">0</span>
                 </a>
                 <a href="/pages/admin/wishlist.html"><i class="fas fa-heart"></i> Избранное</a>
+                <a href="/pages/admin/promocodes.html"><i class="fas fa-ticket-alt"></i> Промокоды</a>
                 <a href="/"><i class="fas fa-store"></i> На сайт</a>
             </nav>
         </aside>
@@ -67,6 +68,10 @@
                 <a href="/pages/admin/reviews.html" class="quick-action">
                     <i class="fas fa-star"></i>
                     <span>Модерация отзывов</span>
+                </a>
+                <a href="/pages/admin/promocodes.html" class="quick-action">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Промокоды</span>
                 </a>
                 <a href="/" class="quick-action">
                     <i class="fas fa-external-link-alt"></i>
@@ -127,11 +132,15 @@
                         <div class="value">${stats.totalReviews || 0}</div>
                         <div class="sub">${stats.pendingReviews || 0} на модерации</div>
                     </div>
+                    <div class="stat-card">
+                        <h3><i class="fas fa-ticket-alt"></i> Промокодов</h3>
+                        <div class="value">${stats.activePromocodes || 0}</div>
+                        <div class="sub">активных</div>
+                    </div>
                 `;
 
                 const ordersRes = await apiRequest('/admin/orders');
                 const orders = await ordersRes.json();
-
                 if (orders.length === 0) {
                     document.getElementById('recent-orders').innerHTML = `
                         <div style="text-align: center; padding: 40px; color: var(--text-light);">
@@ -141,7 +150,6 @@
                     `;
                     return;
                 }
-
                 document.getElementById('recent-orders').innerHTML = `
                     <table class="data-table">
                         <thead>
@@ -149,6 +157,7 @@
                                 <th>№</th>
                                 <th>Клиент</th>
                                 <th>Сумма</th>
+                                <th>Промокод</th>
                                 <th>Статус</th>
                                 <th>Дата</th>
                             </tr>
@@ -158,7 +167,11 @@
                                 <tr>
                                     <td><strong>#${o.id}</strong></td>
                                     <td>${o.user_name || o.email}</td>
-                                    <td>${formatPrice(o.total)}</td>
+                                    <td>
+                                        ${formatPrice(o.total)}
+                                        ${o.discount > 0 ? `<br><small style="color: #4caf50;">-${formatPrice(o.discount)}</small>` : ''}
+                                    </td>
+                                    <td>${o.promocode || '—'}</td>
                                     <td><span class="status-badge status-${o.status}">${getOrderStatusLabel(o.status)}</span></td>
                                     <td>${formatDate(o.created_at)}</td>
                                 </tr>
@@ -177,6 +190,7 @@
             }
         }
 
+        // Init
         checkAuth();
         loadDashboard();
     </script>
