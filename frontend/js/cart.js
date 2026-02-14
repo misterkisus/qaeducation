@@ -78,7 +78,7 @@ function createCartItem(item) {
                  onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
             <div class="cart-item-details">
                 <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">${formatPrice(item.price)}</div>
+                <div class="cart-item-price">${formatPrice(item.price * item.quantity)}</div>
                 <div class="cart-item-quantity">
                     <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">
                         <i class="fas fa-minus"></i>
