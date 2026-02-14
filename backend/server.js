@@ -404,27 +404,46 @@ function normalizeSearchText(value) {
 }
 // ============ AUTH ROUTES ============
 app.post('/api/auth/register', async (req, res) => {
-    const { email, password, name } = req.body;
-    
-    // BUG #2 & #5: РќРµС‚ РІР°Р»РёРґР°С†РёРё РїР°СЂРѕР»СЏ Рё email С„РѕСЂРјР°С‚Р°
-    if (!email) return res.status(400).json({ error: 'Email РѕР±СЏР·Р°С‚РµР»РµРЅ' });
-    if (DATA.users.find(u => u.email === email)) {
-        return res.status(400).json({ error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј email СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚' });
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+        return res.status(400).json({ error: 'Некорректное тело запроса' });
     }
-    
+
+    const { email, password, name } = req.body;
+
+    if (typeof email !== 'string' || email.trim().length === 0) {
+        return res.status(400).json({ error: 'Email обязателен и должен быть строкой' });
+    }
+
+    if (typeof password !== 'string' || password.length === 0) {
+        return res.status(400).json({ error: 'Пароль обязателен и должен быть строкой' });
+    }
+
+    if (name !== undefined && (typeof name !== 'string')) {
+        return res.status(400).json({ error: 'Имя должно быть строкой' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = typeof name === 'string' && name.trim().length > 0
+        ? name.trim()
+        : 'Пользователь';
+
+    if (DATA.users.find(u => u.email.toLowerCase() === normalizedEmail)) {
+        return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+    }
+
     const user = {
         id: DATA.nextUserId++,
-        email,
-        password: await bcrypt.hash(password || '', 10),
-        name: name || 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ',
+        email: normalizedEmail,
+        password: await bcrypt.hash(password, 10),
+        name: normalizedName,
         role: 'user',
         created_at: new Date().toISOString()
     };
     DATA.users.push(user);
     if (!persistOr500(res)) return;
 
-    const token = jwt.sign({ id: user.id, email, role: 'user' }, JWT_SECRET, { expiresIn: '24h' });
-    res.json({ message: 'Р РµРіРёСЃС‚СЂР°С†РёСЏ СѓСЃРїРµС€РЅР°', token, user: { id: user.id, email, name: user.name, role: 'user' } });
+    const token = jwt.sign({ id: user.id, email: user.email, role: 'user' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ message: 'Регистрация успешна', token, user: { id: user.id, email: user.email, name: user.name, role: 'user' } });
 });
 
 app.post('/api/auth/login', async (req, res) => {
